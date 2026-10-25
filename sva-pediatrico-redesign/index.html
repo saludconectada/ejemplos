@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>Caso Clínico Docente: SVAP - ERC 2025</title>
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DISEÑO · Simulador clínico SVAP
+       Azul marino + verde azulado. Los colores de alarma (verde / ámbar / rojo)
+       se reservan para estados clínicos y para la calificación de las decisiones.
+       ========================================================================== */
+    :root {
+      --navy-950: #06142a;
+      --navy-900: #0b1f3a;
+      --navy-800: #112a4d;
+      --navy-700: #1a3a64;
+
+      --teal-700: #0b6e72;
+      --teal-600: #0f8a8f;
+      --teal-500: #14a3a6;
+      --teal-400: #3cc2bf;
+      --teal-200: #a9e6e2;
+      --teal-100: #d6f3f1;
+      --teal-50:  #eef9f8;
+
+      --bg: #f2f5f9;
+      --surface: #ffffff;
+      --line: #d9e1ea;
+      --line-soft: #e8edf3;
+      --ink: #0b1f3a;
+      --ink-2: #2b3e57;
+      --muted: #5a6d85;
+
+      --ok: #15803d;      --ok-bg: #eefaf1;   --ok-line: #bfe6cb;   --ok-ink: #0f4d28;   --ok-mon: #4ade80;
+      --warn: #b45309;    --warn-bg: #fff7e8; --warn-line: #f2d9a6;  --warn-ink: #6b3a05; --warn-mon: #fbbf24;
+      --crit: #c81e1e;    --crit-bg: #fff0f0; --crit-line: #f4c2c2;  --crit-ink: #7a1313; --crit-mon: #ff6b6b;
+
+      --radius: 16px;
+      --shadow-sm: 0 1px 2px rgba(11, 31, 58, .06), 0 1px 1px rgba(11, 31, 58, .04);
+      --shadow-md: 0 14px 30px -14px rgba(11, 31, 58, .28), 0 3px 8px rgba(11, 31, 58, .06);
+
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+
+      --header-h: 150px; /* se recalcula por JavaScript */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--font);
+      color: var(--ink);
+      line-height: 1.55;
+      background:
+        radial-gradient(900px 420px at 100% 0%, rgba(20, 163, 166, .07), transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+    :focus-visible { outline: 3px solid rgba(20, 163, 166, .55); outline-offset: 2px; }
+
+    .ic { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor;
+          stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+               clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+    /* ==========================================================================
+       CABECERA CLÍNICA FIJA: identificación + monitor + progreso
+       ========================================================================== */
+    .sim-header {
+      position: sticky; top: 0; z-index: 60;
+      background: var(--navy-900);
+      color: #e8eef7;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: 0 10px 24px -14px rgba(6, 20, 42, .7);
+    }
+    .sim-header-inner { max-width: 1180px; margin: 0 auto; padding: 10px 20px 0; }
+
+    .id-bar { display: flex; align-items: center; gap: 14px; min-height: 34px; }
+    .brand { display: flex; align-items: center; gap: 8px; color: var(--teal-400); font-weight: 800;
+             font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+    .brand .ic { width: 18px; height: 18px; }
+    .id-sep { width: 1px; height: 22px; background: rgba(255, 255, 255, .16); flex: none; }
+    .patient-id { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; }
+    .avatar-xs { width: 28px; height: 28px; border-radius: 50%; flex: none; }
+    #mon-patient { font-weight: 700; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .id-meta { margin-left: auto; display: flex; align-items: center; gap: 16px; font-size: .82rem; color: #9fb2cc; min-width: 0; flex: 0 1 auto; }
+    .id-meta > .meta-loc { min-width: 0; overflow: hidden; flex: 0 1 auto; }
+    .id-meta > .meta-time, .id-meta > .status-pill { flex: none; }
+    .id-meta > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    #mon-location { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+    .status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px;
+                   font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+                   background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); color: #b8c8df; }
+    .status-pill i { width: 7px; height: 7px; border-radius: 50%; background: #7c93b3; }
+    .status-pill[data-state="live"] i { background: var(--teal-400); animation: blink 1.6s ease-in-out infinite; }
+    .status-pill[data-state="done"] i { background: var(--ok-mon); }
+
+    /* Monitor de constantes */
+    .vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px 0 12px; }
+    .vital {
+      position: relative; overflow: hidden;
+      background: linear-gradient(180deg, #102a4c, #0c2140);
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 12px; padding: 8px 14px 9px 16px;
+      --state: var(--ok-mon);
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .vital::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--state); }
+    .vital[data-state="normal"]   { --state: var(--ok-mon); }
+    .vital[data-state="altered"]  { --state: var(--warn-mon); border-color: rgba(251, 191, 36, .35); }
+    .vital[data-state="critical"] { --state: var(--crit-mon); border-color: rgba(255, 107, 107, .6);
+                                    animation: alarm 1.5s ease-in-out infinite; }
+    .vital-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .vital-label { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #8fa6c4; }
+    .vital-unit { font-size: .68rem; color: #6f87a8; }
+    .vital-value { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 700;
+                   font-size: 2.3rem; line-height: 1.08; margin-top: 2px; color: var(--ok-mon); }
+    .vital-value.is-text { font-size: 1.35rem; line-height: 1.75; font-family: var(--font); letter-spacing: .01em; }
+    .val-normal   { color: var(--ok-mon); }
+    .val-altered  { color: var(--warn-mon); }
+    .val-critical { color: var(--crit-mon); }
+    .vital-value.flash { animation: flash .7s ease-out; }
+    .vital-state { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: .62rem; font-weight: 800;
+                   letter-spacing: .12em; text-transform: uppercase; color: var(--state); }
+    .vital-state i { width: 6px; height: 6px; border-radius: 50%; background: var(--state); }
+
+    /* Progreso (dentro de la cabecera) */
+    .progress-strip { display: none; padding: 0 0 11px; }
+    .progress-info { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: .8rem; color: #b8c8df; }
+    #progress-text { font-weight: 800; color: #fff; white-space: nowrap; }
+    #phase-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #phase-text.is-rescue { color: #ffb4b4; font-weight: 700; }
+    #progress-percent { font-family: var(--mono); font-weight: 700; color: var(--teal-400); }
+    .progress-bar-bg { position: relative; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .13); overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0; border-radius: 999px; transition: width .5s ease;
+                         background: linear-gradient(90deg, var(--teal-500), var(--teal-400)); }
+    .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--navy-900); }
+
+    /* ==========================================================================
+       CONTENEDOR PRINCIPAL
+       ========================================================================== */
+    .main-container { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px 20px 8px; }
+
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 999px;
+               font-size: .74rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+               color: var(--teal-200); background: rgba(60, 194, 191, .12); border: 1px solid rgba(60, 194, 191, .3); }
+
+    /* ==========================================================================
+       PORTADA
+       ========================================================================== */
+    .hero { position: relative; overflow: hidden; border-radius: 26px; color: #fff; padding: 46px;
+            display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .8fr); gap: 40px; align-items: center;
+            background:
+              radial-gradient(900px 380px at 88% -8%, rgba(60, 194, 191, .26), transparent 62%),
+              radial-gradient(600px 300px at -5% 110%, rgba(26, 58, 100, .9), transparent 70%),
+              linear-gradient(135deg, var(--navy-900), var(--navy-800) 58%, #0e3552);
+            box-shadow: var(--shadow-md); }
+    .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
+                    background-image: linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+                                      linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+                    background-size: 34px 34px;
+                    -webkit-mask-image: radial-gradient(ellipse at 75% 20%, #000, transparent 70%);
+                            mask-image: radial-gradient(ellipse at 75% 20%, #000, transparent 70%); }
+    .hero > * { position: relative; }
+    .hero h1 { margin: 18px 0 16px; font-size: clamp(2rem, 3.8vw, 3.15rem); line-height: 1.1; letter-spacing: -.02em; font-weight: 800; }
+    .hero h1 em { display: block; font-style: normal; color: var(--teal-400); }
+    .hero-lead { max-width: 56ch; font-size: 1.08rem; color: rgba(232, 238, 247, .86); }
+    .hero-lead em { color: #fff; font-style: normal; font-weight: 600; }
+
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-top: 28px;
+                   padding: 17px 28px; border-radius: 14px; font-size: 1.08rem; font-weight: 800; letter-spacing: .01em;
+                   color: var(--navy-950); background: var(--teal-400);
+                   box-shadow: 0 10px 28px -8px rgba(60, 194, 191, .65), inset 0 -2px 0 rgba(0, 0, 0, .12);
+                   transition: box-shadow .18s ease, background .18s ease; }
+    .btn-primary:hover { background: #55d0cc; box-shadow: 0 16px 32px -10px rgba(60, 194, 191, .85), 0 0 0 4px rgba(60, 194, 191, .22), inset 0 -2px 0 rgba(0, 0, 0, .12); }
+    .btn-primary .ic { width: 1.25em; height: 1.25em; }
+    .cover-hint { margin-top: 14px; font-size: .86rem; color: rgba(232, 238, 247, .68); }
+
+    .patient-card { padding: 24px; border-radius: 20px; background: rgba(255, 255, 255, .07);
+                    border: 1px solid rgba(255, 255, 255, .16);
+                    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+    .pc-head { display: flex; align-items: center; gap: 16px; padding-bottom: 18px; margin-bottom: 4px; border-bottom: 1px solid rgba(255, 255, 255, .14); }
+    .avatar-lg { width: 76px; height: 76px; flex: none; }
+    .pc-tag { font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-400); }
+    .pc-name { font-size: 1.9rem; font-weight: 800; line-height: 1.1; margin: 2px 0; }
+    .pc-sub { font-size: .95rem; color: rgba(232, 238, 247, .8); }
+    .pc-list { display: grid; gap: 0; }
+    .pc-item { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+    .pc-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .pc-item .ic { margin-top: 3px; color: var(--teal-400); width: 18px; height: 18px; }
+    .pc-item dt { font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #8fb3d1; }
+    .pc-item dd { font-size: .98rem; font-weight: 600; color: #fff; }
+
+    .intro-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 20px; margin-top: 20px; align-items: start; }
+    .info-card { border-radius: var(--radius); padding: 28px; }
+    .info-card .card-kicker { display: flex; align-items: center; gap: 10px; font-size: .74rem; font-weight: 800;
+                              letter-spacing: .11em; text-transform: uppercase; }
+    .info-card .card-kicker .badge-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+    .info-card h2 { margin: 14px 0 10px; font-size: 1.3rem; line-height: 1.3; letter-spacing: -.01em; }
+    .case-card { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+    .case-card .card-kicker { color: var(--navy-700); }
+    .case-card .badge-ic { background: var(--navy-900); color: #fff; }
+    .case-card p { font-size: 1.1rem; color: var(--ink-2); line-height: 1.75; }
+    .goals-card { background: var(--teal-50); border: 1px solid var(--teal-200); }
+    .goals-card .card-kicker { color: var(--teal-700); }
+    .goals-card .badge-ic { background: var(--teal-600); color: #fff; }
+    .objectives-list { list-style: none; display: grid; gap: 12px; margin-top: 16px; counter-reset: obj; }
+    .objectives-list li { counter-increment: obj; position: relative; padding: 14px 16px 14px 58px; border-radius: 12px;
+                          background: #fff; border: 1px solid var(--teal-100); color: var(--ink-2); font-size: .98rem; line-height: 1.5; }
+    .objectives-list li::before { content: counter(obj); position: absolute; left: 14px; top: 13px; width: 30px; height: 30px;
+                                  border-radius: 9px; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--teal-600); }
+
+    /* ==========================================================================
+       ESCENA DE SIMULACIÓN
+       ========================================================================== */
+    .sim-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+    .panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-bottom: 1px solid var(--line-soft);
+                  font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: #fafcfe; }
+    .panel-head .ic { color: var(--teal-600); width: 18px; height: 18px; }
+    .panel-body { padding: 24px 24px 26px; }
+
+    .panel-situation { border-top: 4px solid var(--teal-500); }
+    .scene-badge { display: inline-block; padding: 5px 12px; margin-bottom: 16px; border-radius: 8px; font-size: .74rem; font-weight: 800;
+                   letter-spacing: .05em; text-transform: uppercase; line-height: 1.35; }
+    .badge-decision { background: var(--teal-50); color: var(--teal-700); border: 1px solid var(--teal-200); }
+    .badge-rescue { background: var(--crit-bg); color: var(--crit); border: 1px solid var(--crit-line); }
+    .scene-text { font-size: 1.1rem; line-height: 1.7; color: var(--ink-2); white-space: pre-line; }
+
+    .is-rescue .panel-situation { border-top-color: var(--crit); }
+    .is-rescue .panel-situation .panel-head { background: var(--crit-bg); color: var(--crit); border-bottom-color: var(--crit-line); }
+    .is-rescue .panel-situation .panel-head .ic { color: var(--crit); }
+
+    .question-text { font-size: 1.28rem; line-height: 1.4; font-weight: 800; letter-spacing: -.01em; color: var(--ink); margin-bottom: 20px; }
+
+    .options-list { display: grid; gap: 12px; }
+    .option-btn { display: block; width: 100%; text-align: left; position: relative; background: #fff; color: var(--ink);
+                  border: 1.5px solid var(--line); border-radius: 14px; padding: 16px 18px;
+                  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, opacity .25s ease;
+                  animation: rise .42s cubic-bezier(.2, .7, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 70ms + 120ms); }
+    .opt-inner { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: start; }
+    .opt-letter { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: .95rem;
+                  color: #fff; background: var(--navy-900); transition: background .18s; }
+    .opt-text { font-size: 1.02rem; line-height: 1.5; padding-top: 4px; }
+    .option-btn:hover:not(:disabled) { border-color: var(--teal-500); background: var(--teal-50);
+                                       box-shadow: 0 0 0 3px rgba(20, 163, 166, .16), 0 12px 22px -14px rgba(15, 138, 143, .7); }
+    .option-btn:hover:not(:disabled) .opt-letter { background: var(--teal-600); }
+    .option-btn:disabled { cursor: default; }
+    .option-btn.is-dim { opacity: .55; }
+
+    .opt-tag { grid-column: 2; display: inline-flex; align-items: center; gap: 7px; width: fit-content; margin-top: 4px;
+               padding: 4px 11px; border-radius: 999px; font-size: .74rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+
+    /* Marcado de respuestas (misma regla que el original: elegida con el color de su calificación; la correcta, con borde discontinuo) */
+    .opt-selected.opt-correcta  { border-color: var(--ok);   background: var(--ok-bg); }
+    .opt-selected.opt-aceptable { border-color: var(--warn); background: var(--warn-bg); }
+    .opt-selected.opt-error     { border-color: var(--crit); background: var(--crit-bg); }
+    .opt-selected.opt-correcta  .opt-letter { background: var(--ok); }
+    .opt-selected.opt-aceptable .opt-letter { background: var(--warn); }
+    .opt-selected.opt-error     .opt-letter { background: var(--crit); }
+    .opt-selected.opt-correcta  .opt-tag { background: var(--ok);   color: #fff; }
+    .opt-selected.opt-aceptable .opt-tag { background: var(--warn); color: #fff; }
+    .opt-selected.opt-error     .opt-tag { background: var(--crit); color: #fff; }
+    .opt-selected .opt-text { font-weight: 600; }
+    .opt-correct-recommended { border: 1.5px dashed var(--ok); background: var(--ok-bg); opacity: 1 !important; }
+    .opt-correct-recommended .opt-letter { background: var(--ok); }
+    .opt-correct-recommended .opt-tag { background: transparent; color: var(--ok); border: 1.5px solid var(--ok); }
+
+    /* ==========================================================================
+       FEEDBACK: resultado → consecuencia → justificación → fuente
+       ========================================================================== */
+    .feedback-panel { display: none; margin-top: 20px; border-radius: var(--radius); overflow: hidden; background: #fff;
+                      border: 1px solid var(--fb-line); box-shadow: var(--shadow-md);
+                      scroll-margin-top: calc(var(--header-h) + 14px); animation: rise .38s cubic-bezier(.2, .7, .2, 1) backwards; }
+    .feedback-panel:focus { outline: none; }
+    .fb-correcta  { --fb-color: var(--ok);   --fb-bg: var(--ok-bg);   --fb-line: var(--ok-line);   --fb-ink: var(--ok-ink); }
+    .fb-aceptable { --fb-color: var(--warn); --fb-bg: var(--warn-bg); --fb-line: var(--warn-line); --fb-ink: var(--warn-ink); }
+    .fb-error     { --fb-color: var(--crit); --fb-bg: var(--crit-bg); --fb-line: var(--crit-line); --fb-ink: var(--crit-ink); }
+
+    .fb-head { display: flex; align-items: center; gap: 16px; padding: 18px 26px; background: var(--fb-bg); border-bottom: 1px solid var(--fb-line); color: var(--fb-ink); }
+    .fb-icon { width: 46px; height: 46px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--fb-color); }
+    .fb-icon .ic { width: 26px; height: 26px; }
+    .fb-kicker { font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+    .fb-title { font-size: 1.22rem; font-weight: 800; line-height: 1.25; }
+
+    .fb-body { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 0; }
+    .fb-block { padding: 24px 26px; }
+    .fb-block + .fb-block { border-left: 1px solid var(--line-soft); }
+    .fb-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: .72rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); }
+    .fb-label .ic { width: 17px; height: 17px; }
+    .fb-consequence-block .fb-label { color: var(--fb-color); }
+    #fb-consequence { font-size: 1.2rem; line-height: 1.55; font-weight: 600; color: var(--ink); }
+    #fb-explanation { font-size: 1rem; line-height: 1.65; color: var(--ink-2); }
+
+    .fb-foot { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 16px 26px;
+               background: #f6f8fb; border-top: 1px solid var(--line-soft); }
+    .fb-ref { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1 1 320px; }
+    .fb-ref .ic { margin-top: 2px; color: var(--navy-700); width: 20px; height: 20px; }
+    .fb-ref .fb-label { margin-bottom: 2px; }
+    #fb-source { font-size: .9rem; color: var(--muted); font-style: italic; line-height: 1.45; }
+
+    .btn-next { display: inline-flex; align-items: center; gap: 10px; padding: 13px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem;
+                color: #fff; background: var(--navy-900); transition: background .18s, box-shadow .18s; }
+    .btn-next:hover { background: var(--teal-700); box-shadow: 0 0 0 4px rgba(15, 138, 143, .2); }
+
+    /* ==========================================================================
+       PANTALLA FINAL
+       ========================================================================== */
+    .final-screen { display: none; }
+    .result-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center;
+                   padding: 38px 44px; border-radius: 26px; color: #fff; box-shadow: var(--shadow-md);
+                   background: radial-gradient(700px 320px at 90% -10%, rgba(60, 194, 191, .25), transparent 62%),
+                               linear-gradient(135deg, var(--navy-900), var(--navy-800) 60%, #0e3552); }
+    .ring-wrap { position: relative; width: 176px; height: 176px; }
+    .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: rgba(255, 255, 255, .13); stroke-width: 12; }
+    .ring-fg { fill: none; stroke: var(--teal-400); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 339.29; stroke-dashoffset: 339.29;
+               transition: stroke-dashoffset 1.1s cubic-bezier(.2, .7, .2, 1) .15s; }
+    .score-number { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.1rem; font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+    .score-label { margin: 12px 0 18px; font-size: 1.7rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+    .stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 520px; }
+    .stat { padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .13); }
+    .stat b { display: block; font-size: 1.7rem; line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stat span { display: flex; align-items: center; gap: 7px; font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(232, 238, 247, .8); margin-top: 3px; }
+    .stat span i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+    .stat-ok i { background: var(--ok-mon); } .stat-warn i { background: var(--warn-mon); } .stat-err i { background: var(--crit-mon); }
+
+    .results-panel { margin-top: 20px; }
+    .results-panel .panel-body { padding: 8px 8px 8px; }
+    .section-title { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
+    .section-title .ic { color: var(--teal-600); }
+    .results-panel .panel-head { padding: 18px 26px; background: #fff; }
+    .table-container { overflow-x: auto; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: .96rem; }
+    .summary-table th { text-align: left; padding: 13px 18px; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+                        color: var(--muted); background: #f5f8fb; border-bottom: 1px solid var(--line); }
+    .summary-table td { padding: 18px; vertical-align: top; border-bottom: 1px solid var(--line-soft); color: var(--ink-2); line-height: 1.5; }
+    .summary-table tbody tr:last-child td { border-bottom: 0; }
+    .summary-table th:first-child, .summary-table td:first-child { width: 140px; }
+    .summary-table th:last-child, .summary-table td:last-child { width: 84px; text-align: center; }
+    .dec-num { display: block; font-weight: 800; color: var(--ink); }
+    .dec-phase { display: block; margin-top: 2px; font-size: .8rem; color: var(--muted); line-height: 1.35; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+    .chip-correcta  { background: var(--ok-bg);   color: var(--ok);   border: 1px solid var(--ok-line); }
+    .chip-aceptable { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line); }
+    .chip-error     { background: var(--crit-bg); color: var(--crit); border: 1px solid var(--crit-line); }
+    .pts { display: inline-grid; place-items: center; min-width: 38px; height: 38px; border-radius: 11px; font-weight: 800; font-size: 1.05rem; background: var(--teal-50); color: var(--teal-700); border: 1px solid var(--teal-200); }
+
+    .key-messages-card { margin-top: 20px; padding: 32px 34px; border-radius: 22px; color: #fff; box-shadow: var(--shadow-md);
+                         background: linear-gradient(135deg, var(--navy-900), var(--navy-800)); }
+    .key-messages-card h3 { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 800; letter-spacing: -.01em; margin-bottom: 20px; }
+    .key-messages-card h3 .ic { color: var(--teal-400); }
+    #key-messages-list { list-style: none; display: grid; gap: 12px; counter-reset: km; }
+    #key-messages-list li { counter-increment: km; position: relative; padding: 18px 20px 18px 74px; border-radius: 14px;
+                            background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); line-height: 1.6; color: rgba(232, 238, 247, .9); }
+    #key-messages-list li::before { content: counter(km); position: absolute; left: 20px; top: 18px; width: 38px; height: 38px; border-radius: 11px;
+                                    display: grid; place-items: center; font-size: 1.1rem; font-weight: 800; color: var(--navy-950); background: var(--teal-400); }
+    .km-lead { display: block; font-size: 1.06rem; font-weight: 800; color: #fff; margin-bottom: 3px; }
+
+    .final-actions { display: flex; justify-content: center; padding: 28px 0 6px; }
+    .btn-restart { display: inline-flex; align-items: center; gap: 12px; padding: 16px 30px; border-radius: 14px; font-size: 1.05rem; font-weight: 800;
+                   color: var(--navy-900); background: #fff; border: 2px solid var(--navy-900); transition: background .18s, color .18s; }
+    .btn-restart:hover { background: var(--navy-900); color: #fff; }
+
+    /* ==========================================================================
+       PIE DE PÁGINA DOCENTE
+       ========================================================================== */
+    .footer { text-align: center; font-size: .82rem; color: var(--muted); margin-top: 36px; padding: 22px 20px 34px; border-top: 1px solid var(--line); }
+    .footer p { max-width: 760px; margin: 0 auto; }
+
+    /* ==========================================================================
+       ANIMACIONES (discretas)
+       ========================================================================== */
+    @keyframes rise  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+    @keyframes flash { 0% { filter: brightness(2.2); transform: scale(1.06); } 100% { filter: none; transform: none; } }
+    @keyframes alarm { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); } 50% { box-shadow: 0 0 0 3px rgba(255, 107, 107, .28), 0 0 22px rgba(255, 107, 107, .25); } }
+    .enter .panel { animation: rise .45s cubic-bezier(.2, .7, .2, 1) backwards; }
+    .enter .panel + .panel { animation-delay: .08s; }
+    .view-enter { animation: rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+
+    /* ==========================================================================
+       ADAPTACIÓN A TABLET Y MÓVIL
+       ========================================================================== */
+    @media (max-width: 1020px) {
+      .hero { grid-template-columns: 1fr; padding: 36px; gap: 30px; }
+      .intro-grid { grid-template-columns: 1fr; }
+      .sim-grid { grid-template-columns: 1fr; }
+      .fb-body { grid-template-columns: 1fr; }
+      .fb-block + .fb-block { border-left: 0; border-top: 1px solid var(--line-soft); }
+      .result-hero { gap: 30px; padding: 32px; }
+    }
+
+    @media (max-width: 760px) {
+      /* Tabla de decisiones → tarjetas apiladas */
+      .summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .summary-table, .summary-table tbody, .summary-table tr, .summary-table td { display: block; width: 100%; }
+      .summary-table th:first-child, .summary-table td:first-child,
+      .summary-table th:last-child, .summary-table td:last-child { width: 100%; text-align: left; }
+      .summary-table tr { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+      .summary-table tbody tr:last-child { border-bottom: 0; }
+      .summary-table td { padding: 7px 0; border: 0; }
+      .summary-table td::before { content: attr(data-label); display: block; margin-bottom: 3px; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+      .summary-table td.td-dec::before { display: none; }
+      .summary-table td.td-dec { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .results-panel .panel-body { padding: 0; }
+    }
+
+    @media (max-width: 640px) {
+      .sim-header-inner { padding: 8px 12px 0; }
+      .brand span, .id-meta > .meta-loc, .id-meta > .status-pill, .id-sep { display: none; }
+      .id-meta { gap: 0; }
+      .id-bar { gap: 10px; min-height: 30px; }
+      .vitals { gap: 6px; padding: 8px 0 8px; }
+      .vital { padding: 6px 8px 7px 11px; border-radius: 9px; }
+      .vital::before { width: 3px; }
+      .vital-label { font-size: .62rem; letter-spacing: .06em; }
+      .vital-unit { font-size: .58rem; }
+      .vital-value { font-size: 1.45rem; }
+      .vital-value.is-text { font-size: .8rem; line-height: 1.95; }
+      .vital-value.is-wide { font-size: 1.02rem; line-height: 1.75; }
+      .vital-state { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .progress-strip { padding-bottom: 9px; }
+      .progress-info { font-size: .74rem; }
+
+      .main-container { padding: 16px 14px 4px; }
+      .hero { padding: 26px 20px; border-radius: 20px; }
+      .btn-primary { width: 100%; padding: 17px 18px; }
+      .patient-card { padding: 20px; }
+      .info-card { padding: 22px 20px; }
+      .panel-body { padding: 20px 18px 22px; }
+      .panel-head { padding: 12px 18px; }
+      .scene-text { font-size: 1.04rem; }
+      .question-text { font-size: 1.15rem; }
+      .option-btn { padding: 14px; }
+      .opt-inner { gap: 6px 12px; }
+      .fb-head { padding: 16px 18px; }
+      .fb-block { padding: 20px 18px; }
+      .fb-foot { padding: 16px 18px; }
+      .btn-next { width: 100%; justify-content: center; }
+      #fb-consequence { font-size: 1.1rem; }
+
+      .result-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 28px 18px; border-radius: 20px; }
+      .ring-wrap { width: 150px; height: 150px; }
+      .score-label { font-size: 1.4rem; }
+      .stat-row { gap: 8px; width: 100%; }
+      .stat { padding: 10px 8px; }
+      .stat span { justify-content: center; font-size: .64rem; letter-spacing: .03em; }
+      .key-messages-card { padding: 24px 16px; border-radius: 18px; }
+      #key-messages-list li { padding: 16px 16px 16px 16px; }
+      #key-messages-list li::before { position: static; margin-bottom: 10px; }
+      .btn-restart { width: 100%; justify-content: center; }
+    }
+
+    @media (max-width: 380px) {
+      .vitals { grid-template-columns: repeat(2, 1fr); }
+      .vital-value { font-size: 1.6rem; }
+      .vital-value.is-text { font-size: .95rem; }
+      .vital-value.is-wide { font-size: 1.35rem; line-height: 1.2; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ICONOS (sprite SVG inline, sin dependencias externas) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 19.5V4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-11.5a7 7 0 1 0-14 0C5 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+      <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6"/><path d="M18.5 14a6.5 6.5 0 0 1 3 6"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></symbol>
+      <!-- Lactante: ojos entornados (somnolencia) y gesto neutro -->
+      <symbol id="avatar-infant" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="31" fill="#d6f3f1"/>
+        <circle cx="32" cy="35" r="17" fill="#ffffff" stroke="#0f8a8f" stroke-width="2"/>
+        <path d="M26 22c2-5 10-6 12 0" fill="none" stroke="#0f8a8f" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M24 35q3 2.4 6 0M34 35q3 2.4 6 0" fill="none" stroke="#0b1f3a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M29 42h6" fill="none" stroke="#0b1f3a" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ======================================================================
+       CABECERA CLÍNICA: identificación del paciente, monitor y progreso
+       ====================================================================== -->
+  <header class="sim-header" id="sim-header">
+    <div class="sim-header-inner">
+      <div class="id-bar">
+        <div class="brand"><svg class="ic"><use href="#i-pulse"/></svg><span>SVAP · ERC 2025</span></div>
+        <div class="id-sep"></div>
+        <div class="patient-id">
+          <svg class="avatar-xs" aria-hidden="true"><use href="#avatar-infant"/></svg>
+          <span id="mon-patient">Paciente: Hugo (8 meses, 8 kg)</span>
+        </div>
+        <div class="id-meta">
+          <span class="meta-loc"><svg class="ic"><use href="#i-pin"/></svg><span id="mon-location">PAC / Urgencias AP</span></span>
+          <span class="meta-time"><svg class="ic"><use href="#i-clock"/></svg><span id="mon-time">Hora: 11:30</span></span>
+          <span class="status-pill" id="sim-status" data-state="ready"><i></i><b id="sim-status-text">Preparado</b></span>
+        </div>
+      </div>
+
+      <div class="vitals" role="group" aria-label="Monitor de constantes vitales">
+        <div class="vital" data-state="critical">
+          <div class="vital-top"><span class="vital-label">FC</span><span class="vital-unit">ipm</span></div>
+          <div class="vital-value val-critical" id="val-fc">52</div>
+          <div class="vital-state"><i></i><span class="vital-state-text">Crítico</span></div>
+        </div>
+        <div class="vital" data-state="critical">
+          <div class="vital-top"><span class="vital-label">Sat O₂</span><span class="vital-unit">%</span></div>
+          <div class="vital-value val-critical" id="val-sat">62</div>
+          <div class="vital-state"><i></i><span class="vital-state-text">Crítico</span></div>
+        </div>
+        <div class="vital" data-state="critical">
+          <div class="vital-top"><span class="vital-label">FR</span><span class="vital-unit">rpm</span></div>
+          <div class="vital-value val-critical" id="val-fr">6</div>
+          <div class="vital-state"><i></i><span class="vital-state-text">Crítico</span></div>
+        </div>
+        <div class="vital" data-state="critical">
+          <div class="vital-top"><span class="vital-label">TA</span><span class="vital-unit">mmHg</span></div>
+          <div class="vital-value val-critical is-text" id="val-ta">Indetect.</div>
+          <div class="vital-state"><i></i><span class="vital-state-text">Crítico</span></div>
+        </div>
+      </div>
+
+      <div id="progress-wrapper" class="progress-strip">
+        <div class="progress-info">
+          <span id="progress-text">Decisión 1 de 5</span>
+          <span id="phase-text"></span>
+          <span id="progress-percent">20%</span>
+        </div>
+        <div class="progress-bar-bg" role="progressbar" aria-label="Progreso del caso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
+          <div id="progress-bar-fill" class="progress-bar-fill"></div>
+          <div id="progress-ticks"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       CONTENEDOR PRINCIPAL
+       ====================================================================== -->
+  <main class="main-container">
+    <noscript><p style="padding:24px;background:#fff;border-radius:12px">Este simulador necesita JavaScript activado.</p></noscript>
+
+    <!-- PORTADA -->
+    <section id="welcome-screen" class="welcome">
+      <div class="hero">
+        <div>
+          <span class="eyebrow"><svg class="ic"><use href="#i-pulse"/></svg>Caso Clínico Docente • SVAP ERC 2025</span>
+          <h1 id="case-title">El lactante hipotónico: <em>cuando la bradicardia exige compresiones</em></h1>
+          <p class="hero-lead">Caso interactivo de decisiones ramificadas basado estrictamente en las Recomendaciones del <em>European Resuscitation Council (ERC) 2025</em>.</p>
+          <button id="btn-start-case" class="btn-primary" type="button">
+            <svg class="ic"><use href="#i-play"/></svg>Comenzar Simulación Clínica<svg class="ic"><use href="#i-arrow"/></svg>
+          </button>
+          <p class="cover-hint" id="cover-hint"></p>
+        </div>
+
+        <aside class="patient-card" aria-label="Ficha del paciente">
+          <div class="pc-head">
+            <svg class="avatar-lg" aria-hidden="true"><use href="#avatar-infant"/></svg>
+            <div>
+              <div class="pc-tag">Paciente ficticio</div>
+              <div class="pc-name">Hugo</div>
+              <div class="pc-sub">8 meses (8 kg de peso)</div>
+            </div>
+          </div>
+          <dl class="pc-list">
+            <div class="pc-item"><svg class="ic"><use href="#i-pin"/></svg><div><dt>Lugar de asistencia</dt><dd>PAC / Urgencias de Atención Primaria</dd></div></div>
+            <div class="pc-item"><svg class="ic"><use href="#i-alert"/></svg><div><dt>Motivo de consulta</dt><dd>Insuficiencia respiratoria y somnolencia</dd></div></div>
+            <div class="pc-item"><svg class="ic"><use href="#i-users"/></svg><div><dt>Público objetivo</dt><dd>Medicina, Enfermería y Farmacia</dd></div></div>
+          </dl>
+        </aside>
+      </div>
+
+      <div class="intro-grid">
+        <article class="info-card case-card">
+          <div class="card-kicker"><span class="badge-ic"><svg class="ic"><use href="#i-clipboard"/></svg></span>Información del caso</div>
+          <h2>Escenario clínico inicial</h2>
+          <p>El lactante acude en brazos de su madre por dificultad respiratoria progresiva de 24 horas de evolución, rechazo de tomas y somnolencia creciente. A su llegada al box de triaje, se muestra hipotónico, somnoliento, cianótico y con boqueos agónicos.</p>
+        </article>
+        <article class="info-card goals-card">
+          <div class="card-kicker"><span class="badge-ic"><svg class="ic"><use href="#i-target"/></svg></span>Aprenderás a</div>
+          <h2>Objetivos docentes del caso</h2>
+          <ul class="objectives-list">
+            <li>Aplicar la secuencia pediátrica específica (5 ventilaciones de rescate e inicio con relación 15:2).</li>
+            <li>Identificar la indicación de compresiones torácicas en bradicardia pediátrica (&lt; 60 ipm con mala perfusión) aunque exista pulso central.</li>
+            <li>Establecer un acceso intraóseo precoz y calcular la dosis exacta de Adrenalina IV/IO (10 µg/kg).</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ESCENA / DECISIÓN ACTIVA -->
+    <section id="scene-card" style="display: none;" tabindex="-1" aria-live="off">
+      <div class="sim-grid" id="sim-grid">
+        <article class="panel panel-situation">
+          <div class="panel-head"><svg class="ic"><use href="#i-clipboard"/></svg><span id="situation-label">Situación clínica</span></div>
+          <div class="panel-body">
+            <div id="scene-badge" class="scene-badge badge-decision">Decisión 1 de 5</div>
+            <div id="scene-text" class="scene-text"></div>
+          </div>
+        </article>
+
+        <article class="panel panel-decision">
+          <div class="panel-head"><svg class="ic"><use href="#i-list"/></svg><span>Tu decisión</span></div>
+          <div class="panel-body">
+            <h2 id="scene-question" class="question-text"></h2>
+            <div id="options-list" class="options-list"></div>
+          </div>
+        </article>
+      </div>
+
+      <!-- FEEDBACK -->
+      <div id="feedback-panel" class="feedback-panel" role="region" aria-labelledby="fb-title" tabindex="-1">
+        <div class="fb-head">
+          <div class="fb-icon" id="fb-icon"></div>
+          <div>
+            <div class="fb-kicker">Resultado de tu decisión</div>
+            <div id="fb-title" class="fb-title"></div>
+          </div>
+        </div>
+        <div class="fb-body">
+          <div class="fb-block fb-consequence-block">
+            <div class="fb-label"><svg class="ic"><use href="#i-pulse"/></svg>Qué ocurre al paciente</div>
+            <p id="fb-consequence"></p>
+          </div>
+          <div class="fb-block">
+            <div class="fb-label"><svg class="ic"><use href="#i-info"/></svg>Justificación clínica</div>
+            <p id="fb-explanation"></p>
+          </div>
+        </div>
+        <div class="fb-foot">
+          <div class="fb-ref">
+            <svg class="ic"><use href="#i-book"/></svg>
+            <div>
+              <div class="fb-label">Fuente</div>
+              <div id="fb-source"></div>
+            </div>
+          </div>
+          <button id="btn-next" class="btn-next" type="button">Continuar<svg class="ic"><use href="#i-arrow"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANTALLA FINAL -->
+    <section id="final-screen" class="final-screen">
+      <div class="result-hero">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-bg" cx="60" cy="60" r="54"/>
+            <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="54"/>
+          </svg>
+          <div id="final-score-num" class="score-number">0 / 10</div>
+        </div>
+        <div>
+          <span class="eyebrow"><svg class="ic"><use href="#i-flag"/></svg>Caso finalizado</span>
+          <h2 class="score-label">Puntuación Final Obtenida</h2>
+          <div class="stat-row">
+            <div class="stat stat-ok"><b id="stat-ok">0</b><span><i></i>Correctas</span></div>
+            <div class="stat stat-warn"><b id="stat-warn">0</b><span><i></i>Aceptables</span></div>
+            <div class="stat stat-err"><b id="stat-err">0</b><span><i></i>Errores</span></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel results-panel">
+        <div class="panel-head"><h3 class="section-title"><svg class="ic"><use href="#i-list"/></svg>Resumen de Decisiones del Caso</h3></div>
+        <div class="panel-body">
+          <div class="table-container">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th scope="col">Decisión</th>
+                  <th scope="col">Tu Elección</th>
+                  <th scope="col">Opción Recomendada (ERC 2025)</th>
+                  <th scope="col">Puntos</th>
+                </tr>
+              </thead>
+              <tbody id="summary-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="key-messages-card">
+        <h3><svg class="ic"><use href="#i-target"/></svg>Mensajes Clave del Caso</h3>
+        <ol id="key-messages-list"></ol>
+      </section>
+
+      <div class="final-actions">
+        <button id="btn-restart" class="btn-restart" type="button"><svg class="ic"><use href="#i-restart"/></svg>Reiniciar Simulación Clínica</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA DOCENTE -->
+  <footer class="footer">
+    <p>Material docente. Paciente ficticio. Comprueba dosis y pautas en la versión vigente de las guías. No usar para decisiones con pacientes reales.</p>
+  </footer>
+
+  <!-- LÓGICA Y DATOS DEL CASO CLÍNICO -->
+  <script>
+    /* ==========================================================================
+       OBJETO ÚNICO DE DATOS DEL CASO CLÍNICO (ERC 2025)
+       ========================================================================== */
+    const CASE_DATA = {
+      meta: {
+        title: "El lactante hipotónico: cuando la bradicardia exige compresiones",
+        patient: "Hugo (8 meses, 8 kg)",
+        location: "PAC / Urgencias AP",
+        initialTime: "11:30"
+      },
+      keyMessages: [
+        "En pediatría, la bradicardia < 60 ipm con mala perfusión SE MASAJA: No esperes a la asistolia. Si el lactante tiene bradicardia con signos de shock a pesar de ventilar con oxígeno, las compresiones torácicas son obligatorias aunque palpes pulso.",
+        "Secuencia pediátrica específica (5 ventilaciones + 15:2): La causa primaria es respiratoria/anóxica. Airear los pulmones con 5 ventilaciones de rescate y mantener la relación 15:2 con la técnica de los dos pulgares es la intervención con mayor impacto en la supervivencia.",
+        "Cálculo riguroso de Adrenalina y vía IO precoz: Ante el fallo del acceso venoso en < 1 minuto, no demores la vía intraósea. Administra exactamente 10 µg/kg (0,1 mL/kg de la dilución 1:10.000); los errores decimales en niños son letales."
+      ],
+      scenes: {
+        "scene_1": {
+          isRescue: false,
+          decisionNumber: 1,
+          totalDecisions: 5,
+          badgeText: "Decisión 1 de 5 — Entrada y valoración inicial",
+          text: "Ingresas a la sala de triaje tras el aviso de la enfermera. La madre sostiene a Hugo (8 meses, 8 kg) en brazos. El lactante se muestra flácido, somnoliento, cianótico a nivel acra y central, con esfuerzo respiratorio ineficaz y boqueos intermitentes. No reacciona a la llamada ni a la estimulación táctil.",
+          question: "¿Cuál es la secuencia inicial de actuación recomendada?",
+          vitalsAfter: [
+            { fc: 48, fr: 15, sat: 70, ta: "Indetect." }, // Opción A
+            { fc: 48, fr: 25, sat: 70, ta: "Indetect." }, // Opción B
+            { fc: 0, fr: 0, sat: 45, ta: "Indetect." }     // Opción C (Rescue 1)
+          ],
+          options: [
+            {
+              text: "Abrir la vía aérea en posición neutra y administrar 5 ventilaciones de rescate iniciales con balón-mascarilla y O2 al 100%.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se airean los alvéolos colapsados por la hipoxia. El tórax se eleva eficazmente, pero la FC persiste en 48 ipm.",
+              explanation: "Las guías ERC 2025 establecen que la parada en pediatría es predominantemente anóxica. Se debe iniciar con 5 ventilaciones de rescate antes de las compresiones.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127; Fig. 9, pág. 42)",
+              nextScene: "scene_2"
+            },
+            {
+              text: "Iniciar directamente ventilación asistida a ritmo continuo de 25 resp/min sin el bloque inicial de 5 ventilaciones de rescate.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "El niño recibe oxigenación, pero se pierde el efecto de insuflación inicial para abrir la vía aérea colapsada y evaluar eficacia.",
+              explanation: "Aportar oxigenación ayuda, pero el ERC 2025 recomienda iniciar específicamente con las 5 ventilaciones de rescate iniciales diferenciadas.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127)",
+              nextScene: "scene_2"
+            },
+            {
+              text: "Iniciar inmediatamente compresiones torácicas con secuencia de adulto (30:2) sin realizar ventilaciones de rescate previas.",
+              qualification: "error",
+              points: 0,
+              consequence: "El masaje sobre un pulmón no ventilado y anóxico empeora la hipoxia miocárdica; la FC cae a 0 ipm y el lactante entra en asistolia.",
+              explanation: "Las compresiones sin ventilación previa aumentan la anoxia miocárdica en niños y aceleran el colapso cardiaco.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127)",
+              nextScene: "rescue_1"
+            }
+          ]
+        },
+        "rescue_1": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Asistolia por hipoxia refractaria",
+          text: "El lactante ha entrado en asistolia por anoxia tras iniciar masaje sin ventilar. El monitor muestra una línea isoeléctrica (FC 0 ipm, SatO2 45%). Se requiere una acción de rescate inmediata para recuperar la vía aérea.",
+          question: "¿Qué medida de rescate aplicas de inmediato?",
+          vitalsAfter: [
+            { fc: 48, fr: 15, sat: 70, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Detener compresiones, colocar vía aérea en posición neutra, cánula orofaríngea, 5 insuflaciones de rescate efectivas con O2 al 100% y reanudar RCP 15:2.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La insuflación de O2 rescata la oxigenación miocárdica mínima, retornando el ritmo a bradicardia a 48 ipm.",
+              explanation: "Es indispensable revertir la anoxia ventilando adecuadamente con O2 antes de mantener las compresiones.",
+              source: "ERC 2025: Algoritmo de Rescate en SVAP (pág. 127)",
+              nextScene: "scene_2"
+            }
+          ]
+        },
+        "scene_2": {
+          isRescue: false,
+          decisionNumber: 2,
+          totalDecisions: 5,
+          badgeText: "Decisión 2 de 5 — Reevaluación circulatoria tras ventilación",
+          text: "Tras administrar las ventilaciones de rescate efectivas, mantienes la ventilación con balón-mascarilla. La enfermera comprueba el pulso central (branquial/femoral) en menos de 10 segundos: se palpa pulso muy débil y lento (48 ipm). El lactante sigue pálido y marmoleado.",
+          question: "¿Cuál es la indicación hemodinámica ante este hallazgo?",
+          vitalsAfter: [
+            { fc: 42, fr: 15, sat: 74, ta: "Indetect." }, // Opción A
+            { fc: 30, fr: 15, sat: 65, ta: "Indetect." }, // Opción B
+            { fc: 25, fr: 15, sat: 50, ta: "Indetect." }  // Opción C (Rescue 2)
+          ],
+          options: [
+            {
+              text: "Iniciar compresiones torácicas inmediatamente (relación 15:2, 2 pulgares) por bradicardia < 60 ipm con mala perfusión.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se genera perfusión coronaria y cerebral crítica. La perfusión tisular comienza a mejorar levemente.",
+              explanation: "El ERC 2025 exige iniciar compresiones torácicas si la FC es < 60 ipm con signos de mala perfusión a pesar de ventilar, aunque se palpe pulso.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 133; Fig. 29)",
+              nextScene: "scene_3"
+            },
+            {
+              text: "Continuar únicamente con ventilación de rescate durante 2 minutos más antes de reevaluar, esperando que el O2 suba la FC.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Al no aportar soporte inotrópico mecánico con FC < 60 ipm, el gasto cardiaco sigue siendo insuficiente y la bradicardia cae a 30 ipm.",
+              explanation: "Esperar sin masajear cuando hay mala perfusión agrava la bradicardia e induce colapso circulatorio.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 133)",
+              nextScene: "scene_3"
+            },
+            {
+              text: "Administrar Atropina IV/IO en bolo (20 µg/kg) argumentando un probable tono vagal, sin iniciar compresiones torácicas.",
+              qualification: "error",
+              points: 0,
+              consequence: "La atropina es ineficaz en la bradicardia por hipoxia y retrasa el soporte mecánico circulatorio indispensable, precipitando la AESP.",
+              explanation: "La atropina no está indicada en la bradicardia hipóxica del lactante; solo en hipertonía vagal o bloqueos primarios.",
+              source: "ERC 2025: Manejo de la bradicardia pediátrica (pág. 124)",
+              nextScene: "rescue_2"
+            }
+          ]
+        },
+        "rescue_2": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Colapso en AESP tras retrasar compresiones",
+          text: "El paciente no responde a la atropina y pierde el pulso central. El monitor muestra Actividad Eléctrica Sin Pulso (AESP) a 25 ipm.",
+          question: "¿Cómo reanimas hemodinámicamente al paciente?",
+          vitalsAfter: [
+            { fc: 42, fr: 15, sat: 74, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Iniciar compresiones torácicas inmediatas (técnica de 2 pulgares, 1/3 diámetro AP, 100-120/min) coordinando la relación 15:2.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "El masaje mecánico restablece la presión de perfusión coronaria mínima recuperando pulso palpable a 42 ipm.",
+              explanation: "Iniciar compresiones torácicas es la única medida efectiva para restaurar el gasto cardiaco en AESP o bradicardia grave.",
+              source: "ERC 2025: Algoritmo SVAP (pág. 133)",
+              nextScene: "scene_3"
+            }
+          ]
+        },
+        "scene_3": {
+          isRescue: false,
+          decisionNumber: 3,
+          totalDecisions: 5,
+          badgeText: "Decisión 3 de 5 — El Giro: Acceso vascular y fármacos",
+          text: "Iniciada la RCP 15:2, la enfermera intenta canalizar una vía venosa periférica. Tras dos intentos fallidos en menos de 1 minuto por colapso vascular, el equipo no tiene acceso. Se precisa Adrenalina para ritmo no desfibrilable (8 kg).",
+          question: "¿Qué vía de acceso eliges y qué dosis de Adrenalina indicas?",
+          vitalsAfter: [
+            { fc: 55, fr: 15, sat: 81, ta: "Indetect." }, // Opción A
+            { fc: 40, fr: 15, sat: 70, ta: "Indetect." }, // Opción B
+            { fc: 210, fr: 15, sat: 60, ta: "Indetect." }  // Opción C (Rescue 3)
+          ],
+          options: [
+            {
+              text: "Insertar vía intraósea (IO) en tibia proximal y administrar Adrenalina 10 µg/kg IV/IO (0,08 mg = 0,8 mL de 1:10.000).",
+              qualification: "correcta",
+              points: 2,
+              consequence: "La dosis exacta por vía IO llega rápidamente a la circulación central, aumentando la presión de perfusión coronaria sin toxicidad.",
+              explanation: "Si falla el acceso IV en < 1 min, se establece vía IO. Dosis: 10 µg/kg (0,1 mL/kg de dilución 1:10.000) lo antes posible en ritmos no desfibrilables.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico - Fármacos (pág. 134; Fig. 29)",
+              nextScene: "scene_4"
+            },
+            {
+              text: "Intentar un tercer acceso venoso periférico en yugular externa o femoral antes de recurrir a la vía intraósea.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Se demora la administración de adrenalina en un ritmo no desfibrilable más de 4 minutos, perdiendo el beneficio precoz.",
+              explanation: "No se debe retrasar la adrenalina en ritmos no desfibrilables por insistir en accesos venosos periféricos difíciles.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 134)",
+              nextScene: "scene_4"
+            },
+            {
+              text: "Administrar 1 ampolla entera de Adrenalina de adulto (1 mg) por vía IO o equivocarse administrando 100 µg/kg (error decimal por 10).",
+              qualification: "error",
+              points: 0,
+              consequence: "La sobredosis masiva provoca Taquicardia Ventricular sin pulso a 210 ipm e isquemia miocárdica iatrogénica.",
+              explanation: "Los errores decimales de dosificación en pediatría causan arritmias letales y vasoconstricción periférica extrema.",
+              source: "ERC 2025: Errores de medicación en SVAP (pág. 134)",
+              nextScene: "rescue_3"
+            }
+          ]
+        },
+        "rescue_3": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Taquicardia Ventricular sin pulso por sobredosis",
+          text: "El monitor muestra una Taquicardia Ventricular sin pulso a 210 ipm tras la administración accidental de dosis excessive de adrenalina.",
+          question: "¿Cómo manejas esta arritmia letal inducida?",
+          vitalsAfter: [
+            { fc: 55, fr: 15, sat: 81, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Detener vasoactivos, cargar desfibrilador manual a 4 J/kg (32 J para 8 kg), retirar O2 ambiente, aplicar 1 descarga y reanudar RCP 15:2 por 2 min.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La desfibrilación a 4 J/kg desfibrila el miocardio y la RCP restablece un ritmo organizado a 55 ipm.",
+              explanation: "La TV sin pulso requiere desfibrilación inmediata a 4 J/kg seguida de 2 minutos de RCP de alta calidad.",
+              source: "ERC 2025: Desfibrilación en SVAP (pág. 135)",
+              nextScene: "scene_4"
+            }
+          ]
+        },
+        "scene_4": {
+          isRescue: false,
+          decisionNumber: 4,
+          totalDecisions: 5,
+          badgeText: "Decisión 4 de 5 — Manejo avanzado de la vía aérea",
+          text: "Lleváis 4 minutos de RCP (2 ciclos), se ha administrado Adrenalina IO y mantenéis ventilación con balón-mascarilla. La enfermera advierte distensión gástrica progresiva y fuga por la mascarilla. Un médico sugiere intubar inmediatamente.",
+          question: "¿Cuál es la estrategia recomendada para la vía aérea en este momento?",
+          vitalsAfter: [
+            { fc: 138, fr: 36, sat: 100, ta: "78/46" }, // Opción A (RCE)
+            { fc: 110, fr: 30, sat: 95, ta: "70/40" },  // Opción B
+            { fc: 30, fr: 0, sat: 45, ta: "Indetect." }   // Opción C (Rescue 4)
+          ],
+          options: [
+            {
+              text: "Optimizar balón-mascarilla a 2 personas con cánula orofaríngea (o insertar DSG i-gel). Intubar solo si hay personal experto, con tubo con balón y pausa < 5-10s.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se asegura la ventilación sin interrumpir el flujo sanguíneo coronario. El paciente recupera circulación espontánea (RCE).",
+              explanation: "En SVAP se recomienda intubar solo si hay un experto capacitado, usando tubos con balón y reduciendo pausas a < 5-10s. De lo contrario, balón-mascarilla a 2 personas o DSG.",
+              source: "ERC 2025: Oxigenación y Vía Aérea en SVAP (pág. 117, 136-137)",
+              nextScene: "scene_5"
+            },
+            {
+              text: "Insertar una mascarilla laríngea / DSG, pero detener por completo las compresiones torácicas durante todo el procedimiento de inserción y fijación.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Se logra la vía aérea, pero la pausa del masaje (> 20s) provoca una caída severa de la presión de perfusión coronaria.",
+              explanation: "Las pausas prolongadas en las compresiones reducen drásticamente la tasa de RCE.",
+              source: "ERC 2025: Control de pausas en RCP (pág. 136)",
+              nextScene: "scene_5"
+            },
+            {
+              text: "Interrumpir compresiones > 45 segundos para realizar intentos repetidos de intubación endotraqueal directa sin balón por personal no experimentado.",
+              qualification: "error",
+              points: 0,
+              consequence: "Hipoxia crítica sobreañadida e interrupción del gasto cardiaco que provocan un nuevo colapso hemodinámico.",
+              explanation: "Está totalmente desaconsejado pausar el masaje > 10 segundos para intubar si no se domina la técnica.",
+              source: "ERC 2025: Manejo de vía aérea en pediatría (pág. 136)",
+              nextScene: "rescue_4"
+            }
+          ]
+        },
+        "rescue_4": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Desaturación severa por intubación prolongada",
+          text: "El intento de intubación prolongado causa desaturación al 45% y el ETCO2 cae a 8 mmHg con bradicardia severa a 30 ipm.",
+          question: "¿Cómo recuperas la oxigenación y perfusión?",
+          vitalsAfter: [
+            { fc: 138, fr: 36, sat: 100, ta: "78/46" }
+          ],
+          options: [
+            {
+              text: "Retirar laringoscopio, reanudar compresiones continuas y ventilar con balón-mascarilla a 2 personas con O2 al 100% hasta recuperar RCE.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La ventilación efectiva a 2 personas restablece el intercambio gaseoso logrando la RCE a 138 ipm.",
+              explanation: "Retornar al balón-mascarilla efectivo es la medida de rescate primaria ante el fallo de intubación.",
+              source: "ERC 2025: Algoritmo de Rescate en Vía Aérea (pág. 136)",
+              nextScene: "scene_5"
+            }
+          ]
+        },
+        "scene_5": {
+          isRescue: false,
+          decisionNumber: 5,
+          totalDecisions: 5,
+          badgeText: "Decisión 5 de 5 — Cuidados Posresucitación (RCE)",
+          text: "Hugo presenta tos, movimientos espontáneos y llanto débil. RCE confirmada: FC 138 ipm sinusal, TA 78/46 mmHg, SatO2 100% (con O2 100%). Glucemia capilar: 42 mg/dL. Temp: 36,1 °C.",
+          question: "¿Cuáles son las prioridades terapéuticas en esta fase pos-RCE inmediata?",
+          vitalsAfter: [
+            { fc: 125, fr: 30, sat: 96, ta: "82/50" }, // Opción A
+            { fc: 130, fr: 32, sat: 100, ta: "80/48" }, // Opción B
+            { fc: 150, fr: 45, sat: 99, ta: "90/55" }   // Opción C
+          ],
+          options: [
+            {
+              text: "Titular FiO2 para SatO2 94-98% (evitar hiperoxia), normocapnia, bolo IV/IO de Glucosa al 10% (2 mL/kg = 0,2 g/kg) y prevenir hipertermia.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se protege el cerebro postisquémico evitando toxicidad por hiperoxia, se normaliza la glucemia y se estabiliza la función cardiovascular.",
+              explanation: "Tras la RCE se debe titular O2 a SpO2 94-98%, corregir la hipoglucemia (< 70 mg/dL) con 2 mL/kg de Glucosa 10% y prevenir la fiebre.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 139, 152-153; Fig. 30)",
+              nextScene: "final"
+            },
+            {
+              text: "Mantener ventilación con O2 al 100% indefinidamente por seguridad y diferir la corrección de glucemia hasta la llegada del equipo de trasplante/UVI.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "La hiperoxia prolongada genera radicales libres que agravan la lesión cerebral pos-parada y la hipoglucemia mantenida arriesga deterioro neurológico.",
+              explanation: "La hiperoxia descontrolada y la hipoglucemia mantenida aumentan la morbimortalidad neurológica.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 153)",
+              nextScene: "final"
+            },
+            {
+              text: "Administrar Suero Glucosado al 50% concentrado sin diluir e hiperventilar al lactante para lograr un ETCO2 < 25 mmHg.",
+              qualification: "error",
+              points: 0,
+              consequence: "La hiperosmolaridad severa y la vasoconstricción cerebral por hipocapnia provocan daño neurológico secundario e inducen convulsiones.",
+              explanation: "Está contraindicado el uso de glucosa hipertónica concentrada e hiperventilación profiláctica en pos-RCE.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 153)",
+              nextScene: "final"
+            }
+          ]
+        }
+      }
+    };
+
+    /* ==========================================================================
+       LÓGICA DEL JUEGO Y CONTROL DEL ESTADO
+       ========================================================================== */
+    let currentSceneKey = "scene_1";
+    let userHistory = [];
+    let totalScore = 0;
+
+    // Elementos DOM
+    const valFc = document.getElementById("val-fc");
+    const valSat = document.getElementById("val-sat");
+    const valFr = document.getElementById("val-fr");
+    const valTa = document.getElementById("val-ta");
+
+    const header = document.getElementById("sim-header");
+    const monPatient = document.getElementById("mon-patient");
+    const monLocation = document.getElementById("mon-location");
+    const monTime = document.getElementById("mon-time");
+    const simStatus = document.getElementById("sim-status");
+    const simStatusText = document.getElementById("sim-status-text");
+
+    const welcomeScreen = document.getElementById("welcome-screen");
+    const btnStartCase = document.getElementById("btn-start-case");
+    const coverHint = document.getElementById("cover-hint");
+
+    const progressWrapper = document.getElementById("progress-wrapper");
+    const progressText = document.getElementById("progress-text");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressBar = document.getElementById("progress-bar");
+    const progressBarFill = document.getElementById("progress-bar-fill");
+    const progressTicks = document.getElementById("progress-ticks");
+    const phaseText = document.getElementById("phase-text");
+
+    const sceneCard = document.getElementById("scene-card");
+    const simGrid = document.getElementById("sim-grid");
+    const situationLabel = document.getElementById("situation-label");
+    const sceneBadge = document.getElementById("scene-badge");
+    const sceneText = document.getElementById("scene-text");
+    const sceneQuestion = document.getElementById("scene-question");
+    const optionsList = document.getElementById("options-list");
+
+    const feedbackPanel = document.getElementById("feedback-panel");
+    const fbIcon = document.getElementById("fb-icon");
+    const fbTitle = document.getElementById("fb-title");
+    const fbConsequence = document.getElementById("fb-consequence");
+    const fbExplanation = document.getElementById("fb-explanation");
+    const fbSource = document.getElementById("fb-source");
+    const btnNext = document.getElementById("btn-next");
+
+    const finalScreen = document.getElementById("final-screen");
+    const finalScoreNum = document.getElementById("final-score-num");
+    const ringFg = document.getElementById("ring-fg");
+    const summaryTbody = document.getElementById("summary-tbody");
+    const keyMessagesList = document.getElementById("key-messages-list");
+    const btnRestart = document.getElementById("btn-restart");
+
+    /* ---------- Utilidades de presentación ---------- */
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const RING_LENGTH = 2 * Math.PI * 54; // circunferencia del anillo de puntuación
+
+    function icon(name) {
+      return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>';
+    }
+
+    function replayAnimation(el, className) {
+      el.classList.remove(className);
+      void el.offsetWidth; // fuerza reflow para reiniciar la animación
+      el.classList.add(className);
+    }
+
+    function scrollToEl(el) {
+      el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    }
+
+    function syncHeaderHeight() {
+      document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+    }
+
+    // Separa "Decisión 1 de 5 — Entrada y valoración inicial" en etiqueta y fase
+    function splitBadge(text) {
+      const i = text.indexOf(" — ");
+      return i > -1 ? [text.slice(0, i), text.slice(i + 3)] : [text, ""];
+    }
+
+    function setStatus(state, label) {
+      simStatus.dataset.state = state;
+      simStatusText.textContent = label;
+    }
+
+    function buildProgressTicks(total) {
+      if (progressTicks.dataset.total === String(total)) return;
+      progressTicks.dataset.total = String(total);
+      progressTicks.innerHTML = "";
+      for (let i = 1; i < total; i++) {
+        const t = document.createElement("span");
+        t.className = "tick";
+        t.style.left = "calc(" + (i / total * 100) + "% - 1px)";
+        progressTicks.appendChild(t);
+      }
+    }
+
+    // Inicialización del juego
+    function initGame() {
+      currentSceneKey = "scene_1";
+      userHistory = [];
+      totalScore = 0;
+
+      finalScreen.style.display = "none";
+      sceneCard.style.display = "none";
+      progressWrapper.style.display = "none";
+      welcomeScreen.style.display = "block";
+      replayAnimation(welcomeScreen, "view-enter");
+
+      // Identificación del paciente (datos de CASE_DATA.meta)
+      monPatient.textContent = "Paciente: " + CASE_DATA.meta.patient;
+      monLocation.textContent = CASE_DATA.meta.location;
+      monTime.textContent = "Hora: " + CASE_DATA.meta.initialTime;
+      setStatus("ready", "Preparado");
+
+      // Resumen para la portada, calculado a partir de las escenas
+      const all = Object.values(CASE_DATA.scenes);
+      const nDecisions = all.filter(s => !s.isRescue).length;
+      const nRescue = all.filter(s => s.isRescue).length;
+      coverHint.textContent = nDecisions + " decisiones clínicas · " + nRescue + " escenas de rescate según tus elecciones";
+
+      // Cargar constantes iniciales
+      updateVitals(52, 62, 6, "Indetect.");
+      syncHeaderHeight();
+      window.scrollTo(0, 0);
+    }
+
+    // Iniciar caso desde la pantalla inicial
+    btnStartCase.onclick = () => {
+      welcomeScreen.style.display = "none";
+      progressWrapper.style.display = "block";
+      sceneCard.style.display = "block";
+      setStatus("live", "En curso");
+      renderScene(currentSceneKey);
+      syncHeaderHeight();
+      window.scrollTo(0, 0);
+    };
+
+    // Actualizar monitor de constantes y aplicar colores
+    const STATE_LABEL = { normal: "Normal", altered: "Alterado", critical: "Crítico" };
+
+    function paintVital(el, state, text) {
+      const changed = el.textContent !== String(text);
+      el.textContent = text;
+      el.className = "vital-value val-" + state;
+      if (isNaN(parseInt(text, 10))) el.classList.add("is-text");
+      else if (String(text).indexOf("/") > -1) el.classList.add("is-wide");
+      const tile = el.closest(".vital");
+      tile.dataset.state = state;
+      tile.querySelector(".vital-state-text").textContent = STATE_LABEL[state];
+      if (changed && !reduceMotion) replayAnimation(el, "flash");
+    }
+
+    function updateVitals(fc, sat, fr, ta) {
+      // Colores FC
+      let sFc;
+      if (fc < 60 || fc > 180) sFc = "critical";
+      else if (fc < 90 || fc > 160) sFc = "altered";
+      else sFc = "normal";
+
+      // Colores SatO2
+      let sSat;
+      if (sat < 90) sSat = "critical";
+      else if (sat < 94) sSat = "altered";
+      else sSat = "normal";
+
+      // Colores FR
+      let sFr;
+      if (fr < 12 || fr > 60) sFr = "critical";
+      else if (fr < 20 || fr > 50) sFr = "altered";
+      else sFr = "normal";
+
+      // Colores TA
+      let sTa;
+      if (ta === "Indetect." || ta.startsWith("0/")) sTa = "critical";
+      else if (parseInt(ta) < 75) sTa = "altered";
+      else sTa = "normal";
+
+      paintVital(valFc, sFc, fc);
+      paintVital(valSat, sSat, sat);
+      paintVital(valFr, sFr, fr);
+      paintVital(valTa, sTa, ta);
+    }
+
+    // Renderizar escena activa
+    function renderScene(sceneKey) {
+      const scene = CASE_DATA.scenes[sceneKey];
+      if (!scene) return;
+
+      // Ocultar panel feedback
+      feedbackPanel.style.display = "none";
+
+      // Badge, fase y progreso
+      const phase = splitBadge(scene.badgeText)[1];
+      if (scene.isRescue) {
+        sceneBadge.className = "scene-badge badge-rescue";
+        sceneBadge.textContent = scene.badgeText;
+        sceneCard.classList.add("is-rescue");
+        situationLabel.textContent = "Escena de rescate";
+        phaseText.className = "is-rescue";
+        phaseText.textContent = "Rescate · " + phase;
+      } else {
+        sceneBadge.className = "scene-badge badge-decision";
+        sceneBadge.textContent = scene.badgeText;
+        sceneCard.classList.remove("is-rescue");
+        situationLabel.textContent = "Situación clínica";
+        phaseText.className = "";
+        phaseText.textContent = phase;
+
+        const pct = Math.round((scene.decisionNumber / scene.totalDecisions) * 100);
+        buildProgressTicks(scene.totalDecisions);
+        progressText.textContent = `Decisión ${scene.decisionNumber} de ${scene.totalDecisions}`;
+        progressPercent.textContent = `${pct}%`;
+        progressBarFill.style.width = `${pct}%`;
+        progressBar.setAttribute("aria-valuenow", String(pct));
+      }
+
+      // Textos
+      sceneText.textContent = scene.text;
+      sceneQuestion.textContent = scene.question;
+
+      // Limpiar y crear opciones
+      optionsList.innerHTML = "";
+      scene.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn";
+        btn.style.setProperty("--i", idx);
+
+        const inner = document.createElement("span");
+        inner.className = "opt-inner";
+        const letter = document.createElement("span");
+        letter.className = "opt-letter";
+        letter.setAttribute("aria-hidden", "true");
+        letter.textContent = String.fromCharCode(65 + idx);
+        const txt = document.createElement("span");
+        txt.className = "opt-text";
+        txt.textContent = opt.text;
+        inner.appendChild(letter);
+        inner.appendChild(txt);
+        btn.appendChild(inner);
+
+        btn.onclick = () => selectOption(sceneKey, idx);
+        optionsList.appendChild(btn);
+      });
+
+      replayAnimation(simGrid, "enter");
+      scrollToEl(sceneCard);
+      sceneCard.focus({ preventScroll: true });
+    }
+
+    function addTag(btn, className, iconName, label) {
+      const tag = document.createElement("span");
+      tag.className = "opt-tag " + className;
+      tag.innerHTML = icon(iconName);
+      tag.appendChild(document.createTextNode(label));
+      btn.querySelector(".opt-inner").appendChild(tag);
+    }
+
+    // Manejar selección de opción
+    function selectOption(sceneKey, optionIdx) {
+      const scene = CASE_DATA.scenes[sceneKey];
+      const selectedOpt = scene.options[optionIdx];
+
+      const TAG = {
+        correcta:  { icon: "check", label: "Correcta" },
+        aceptable: { icon: "alert", label: "Aceptable pero mejorable" },
+        error:     { icon: "x",     label: "Error" }
+      };
+
+      // Bloquear botones
+      const buttons = optionsList.querySelectorAll(".option-btn");
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+
+        if (idx === optionIdx) {
+          btn.classList.add("opt-selected", `opt-${selectedOpt.qualification}`);
+          addTag(btn, "", TAG[selectedOpt.qualification].icon, TAG[selectedOpt.qualification].label);
+        } else if (selectedOpt.qualification !== "correcta" && scene.options[idx].qualification === "correcta") {
+          btn.classList.add("opt-correct-recommended");
+          addTag(btn, "", "check", "Opción recomendada");
+        } else {
+          btn.classList.add("is-dim");
+        }
+      });
+
+      // Actualizar constantes
+      const newVitals = scene.vitalsAfter[optionIdx] || scene.vitalsAfter;
+      updateVitals(newVitals.fc, newVitals.sat, newVitals.fr, newVitals.ta);
+
+      // Registrar historial si no es rescate
+      if (!scene.isRescue) {
+        totalScore += selectedOpt.points;
+        const recommendedOpt = scene.options.find(o => o.qualification === "correcta");
+        userHistory.push({
+          decisionNum: scene.decisionNumber,
+          badgeText: scene.badgeText,
+          chosenText: selectedOpt.text,
+          recommendedText: recommendedOpt ? recommendedOpt.text : selectedOpt.text,
+          qualification: selectedOpt.qualification,
+          points: selectedOpt.points
+        });
+      }
+
+      // Configurar panel feedback
+      feedbackPanel.className = `feedback-panel fb-${selectedOpt.qualification}`;
+
+      let titleText = "";
+      if (selectedOpt.qualification === "correcta") {
+        titleText = `Opción Correcta (+${selectedOpt.points} pts)`;
+      } else if (selectedOpt.qualification === "aceptable") {
+        titleText = `Opción Aceptable pero Mejorable (+${selectedOpt.points} pt)`;
+      } else {
+        titleText = `Error Grave de Manejo (+${selectedOpt.points} pts)`;
+      }
+
+      fbIcon.innerHTML = icon(TAG[selectedOpt.qualification].icon);
+      fbTitle.textContent = titleText;
+      fbConsequence.textContent = selectedOpt.consequence;
+      fbExplanation.textContent = selectedOpt.explanation;
+      fbSource.textContent = selectedOpt.source;
+
+      feedbackPanel.style.display = "block";
+      scrollToEl(feedbackPanel);
+      feedbackPanel.focus({ preventScroll: true });
+
+      // Botón continuar
+      btnNext.onclick = () => {
+        if (selectedOpt.nextScene === "final") {
+          renderFinalScreen();
+        } else {
+          currentSceneKey = selectedOpt.nextScene;
+          renderScene(currentSceneKey);
+        }
+      };
+    }
+
+    // Renderizar pantalla final
+    function renderFinalScreen() {
+      sceneCard.style.display = "none";
+      progressWrapper.style.display = "none";
+      setStatus("done", "Finalizado");
+
+      finalScoreNum.textContent = `${totalScore} / 10`;
+
+      // Recuento por calificación
+      const count = q => userHistory.filter(h => h.qualification === q).length;
+      document.getElementById("stat-ok").textContent = count("correcta");
+      document.getElementById("stat-warn").textContent = count("aceptable");
+      document.getElementById("stat-err").textContent = count("error");
+
+      // Tabla de resumen
+      summaryTbody.innerHTML = "";
+      userHistory.forEach(item => {
+        const tr = document.createElement("tr");
+
+        const QUAL = {
+          correcta:  { chip: "chip-correcta",  icon: "check", label: "Correcta" },
+          aceptable: { chip: "chip-aceptable", icon: "alert", label: "Aceptable" },
+          error:     { chip: "chip-error",     icon: "x",     label: "Error" }
+        };
+        const q = QUAL[item.qualification] || QUAL.error;
+
+        // Columna 1: decisión y fase
+        const tdDec = document.createElement("td");
+        tdDec.className = "td-dec";
+        tdDec.dataset.label = "Decisión";
+        const wrapDec = document.createElement("div");
+        const num = document.createElement("span");
+        num.className = "dec-num";
+        num.textContent = `Decisión ${item.decisionNum}`;
+        const ph = document.createElement("span");
+        ph.className = "dec-phase";
+        ph.textContent = splitBadge(item.badgeText)[1];
+        wrapDec.appendChild(num);
+        wrapDec.appendChild(ph);
+        tdDec.appendChild(wrapDec);
+
+        // Columna 2: elección + calificación
+        const tdChosen = document.createElement("td");
+        tdChosen.dataset.label = "Tu elección";
+        const chosen = document.createElement("div");
+        chosen.textContent = item.chosenText;
+        const chip = document.createElement("span");
+        chip.className = "chip " + q.chip;
+        chip.innerHTML = icon(q.icon);
+        chip.appendChild(document.createTextNode(q.label));
+        tdChosen.appendChild(chosen);
+        tdChosen.appendChild(chip);
+
+        // Columna 3: opción recomendada
+        const tdRec = document.createElement("td");
+        tdRec.dataset.label = "Opción recomendada (ERC 2025)";
+        tdRec.textContent = item.recommendedText;
+
+        // Columna 4: puntos
+        const tdPts = document.createElement("td");
+        tdPts.dataset.label = "Puntos";
+        const pts = document.createElement("span");
+        pts.className = "pts";
+        pts.textContent = item.points;
+        tdPts.appendChild(pts);
+
+        tr.appendChild(tdDec);
+        tr.appendChild(tdChosen);
+        tr.appendChild(tdRec);
+        tr.appendChild(tdPts);
+        summaryTbody.appendChild(tr);
+      });
+
+      // Mensajes clave
+      keyMessagesList.innerHTML = "";
+      CASE_DATA.keyMessages.forEach(msg => {
+        const li = document.createElement("li");
+        const i = msg.indexOf(": ");
+        if (i > -1) {
+          const lead = document.createElement("span");
+          lead.className = "km-lead";
+          lead.textContent = msg.slice(0, i + 1);          // incluye los dos puntos
+          li.appendChild(lead);
+          li.appendChild(document.createTextNode(" " + msg.slice(i + 2)));
+        } else {
+          li.textContent = msg;
+        }
+        keyMessagesList.appendChild(li);
+      });
+
+      // Anillo de puntuación
+      ringFg.style.strokeDasharray = RING_LENGTH;
+      ringFg.style.strokeDashoffset = RING_LENGTH;
+      finalScreen.style.display = "block";
+      replayAnimation(finalScreen, "view-enter");
+      syncHeaderHeight();
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        ringFg.style.strokeDashoffset = RING_LENGTH * (1 - Math.min(totalScore, 10) / 10);
+      }));
+    }
+
+    // Evento reiniciar
+    btnRestart.onclick = () => {
+      initGame();
+    };
+
+    // Altura de la cabecera fija (para anclar los desplazamientos)
+    if ("ResizeObserver" in window) new ResizeObserver(syncHeaderHeight).observe(header);
+    window.addEventListener("resize", syncHeaderHeight);
+
+    // Iniciar al cargar
+    window.onload = initGame;
+  </script>
+</body>
+</html>
