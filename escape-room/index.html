@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escape Room Clínico: Código Resus 2025</title>
+  <style>
+    /* ==========================================================================
+       ESTILOS GENERALES Y DISEÑO CLÍNICO SOBRIO (DARK SLATE)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* ==========================================================================
+       BARRA FIJA SUPERIOR (CRONÓMETRO Y MARCADOR)
+       ========================================================================== */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: #1e293b;
+      border-bottom: 2px solid #334155;
+      padding: 12px 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-bar-content {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #38bdf8;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .hud-metrics {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .metric-badge {
+      background-color: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-badge span {
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+
+    /* ==========================================================================
+       CONTENEDOR PRINCIPAL
+       ========================================================================== */
+    .container {
+      max-width: 850px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      margin-bottom: 24px;
+    }
+
+    /* ==========================================================================
+       PANTALLA DE BIENVENIDA / FICHA TÉCNICA
+       ========================================================================== */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-blue {
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+
+    .badge-amber {
+      background-color: #d97706;
+      color: #ffffff;
+    }
+
+    .badge-red {
+      background-color: #dc2626;
+      color: #ffffff;
+    }
+
+    .title-main {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #f8fafc;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      background-color: #0f172a;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      margin: 20px 0;
+    }
+
+    .info-item strong {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+
+    .info-item span {
+      font-size: 0.95rem;
+      color: #f8fafc;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .rules-box {
+      background-color: #0f172a;
+      border-left: 4px solid #38bdf8;
+      padding: 16px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+
+    .rules-box h3 {
+      font-size: 1rem;
+      color: #38bdf8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .rules-list {
+      padding-left: 20px;
+      font-size: 0.92rem;
+      color: #cbd5e1;
+    }
+
+    .rules-list li {
+      margin-bottom: 6px;
+    }
+
+    /* ==========================================================================
+       ESTILOS DE PRUEBA / RETO
+       ========================================================================== */
+    .scenario-box {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #38bdf8;
+      white-space: pre-line;
+    }
+
+    .question-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #f8fafc;
+      margin: 20px 0 16px 0;
+      border-left: 4px solid #38bdf8;
+      padding-left: 12px;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      text-align: left;
+      background-color: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 0.95rem;
+      color: #f8fafc;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: #38bdf8;
+      background-color: #1e293b;
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .opt-correct {
+      border-color: #22c55e !important;
+      background-color: #052e16 !important;
+      color: #4ade80 !important;
+      font-weight: 700;
+    }
+
+    .opt-wrong {
+      border-color: #ef4444 !important;
+      background-color: #450a0a !important;
+      color: #fca5a5 !important;
+    }
+
+    /* ==========================================================================
+       SECCIÓN DE PISTAS Y FEEDBACK
+       ========================================================================== */
+    .hints-container {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #334155;
+    }
+
+    .btn-hint {
+      background-color: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-hint:hover:not(:disabled) {
+      background-color: #475569;
+    }
+
+    .btn-hint:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .hint-box {
+      background-color: #451a03;
+      border: 1px solid #78350f;
+      color: #fde68a;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .feedback-panel {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 5px solid;
+      display: none;
+    }
+
+    .fb-success {
+      background-color: #052e16;
+      border-color: #22c55e;
+      color: #dc2626;
+    }
+
+    .fb-success .fb-title { color: #4ade80; }
+    .fb-success .fb-text { color: #f8fafc; }
+
+    .fb-error-box {
+      background-color: #450a0a;
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    .unlock-key-card {
+      background-color: #0284c7;
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-weight: 800;
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 14px 0;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background-color: #0284c7;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-action:hover {
+      background-color: #0369a1;
+    }
+
+    /* ==========================================================================
+       PANTALLA FINAL Y TABLA RESUMEN
+       ========================================================================== */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.88rem;
+    }
+
+    .summary-table th, .summary-table td {
+      padding: 10px 12px;
+      border: 1px solid #334155;
+      text-align: left;
+    }
+
+    .summary-table th {
+      background-color: #0f172a;
+      color: #38bdf8;
+    }
+
+    .key-takeaways {
+      background-color: #0f172a;
+      border: 1px solid #0284c7;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .key-takeaways h3 {
+      color: #38bdf8;
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      text-transform: uppercase;
+    }
+
+    .key-takeaways ul {
+      padding-left: 20px;
+      color: #cbd5e1;
+    }
+
+    .key-takeaways li {
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 40px;
+      padding: 20px 16px 0 16px;
+      border-top: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA FIJA SUPERIOR DE ESTADO Y CRONÓMETRO -->
+  <header class="top-bar">
+    <div class="top-bar-content">
+      <div class="brand-title">Código Resus 2025</div>
+      <div class="hud-metrics">
+        <div class="metric-badge">Progreso: <span id="hud-progress">0/5</span></div>
+        <div class="metric-badge">Puntos: <span id="hud-score">0</span></div>
+        <div class="metric-badge">Tiempo: <span id="hud-timer">00:00</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- PANTALLA INICIAL / FICHA TÉCNICA Y REGLAS -->
+    <section id="screen-welcome" class="card">
+      <div class="badge badge-blue">Escape Room Clínico Interactivo</div>
+      <h1 class="title-main">Código Resus 2025: La Guardia de Urgencias</h1>
+      
+      <p style="color: #94a3b8; font-size: 0.98rem;">
+        Simulación clínica de decisiones encadenadas fundada estrictamente en el Resumen Ejecutivo de las <strong>Guías ERC 2025 (European Resuscitation Council)</strong>.
+      </p>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <strong>Público Objetivo</strong>
+          <span>Medicina, Enfermería, Farmacia y TES</span>
+        </div>
+        <div class="info-item">
+          <strong>Límite Orientativo</strong>
+          <span>45 Minutos (9 min / prueba)</span>
+        </div>
+        <div class="info-item">
+          <strong>Puntuación Máxima</strong>
+          <span>100 Puntos (20 pts / prueba)</span>
+        </div>
+        <div class="info-item">
+          <strong>Mecánica</strong>
+          <span>5 Pruebas con Claves de Desbloqueo</span>
+        </div>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <h3 style="color: #f8fafc; font-size: 1rem; margin-bottom: 6px;">Narrativa del Caso:</h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.4;">
+          Un fallo en la central de monitorización del hospital obliga al equipo de guardia a tomar decisiones clínicas críticas a ciegas. Guiados únicamente por la exploración, las constantes reportadas y el análisis de laboratorio, debéis resolver 5 pruebas encadenadas para estabilizar a los pacientes y desbloquear cada área del servicio.
+        </p>
+      </div>
+
+      <div class="rules-box">
+        <h3>Reglas del Juego y Sistema de Puntuación</h3>
+        <ul class="rules-list">
+          <li><strong>Resolución al 1.er intento (sin pistas):</strong> 20 puntos por prueba.</li>
+          <li><strong>Resolución al 2.º intento (tras Pista 1):</strong> 12 puntos (-8 pts de penalización).</li>
+          <li><strong>Resolución al 3.er intento (tras Pista 2):</strong> 5 puntos (-15 pts de penalización).</li>
+          <li>Cada respuesta correcta genera una <strong>Clave de Desbloqueo</strong> y la fundamentación oficial ERC 2025.</li>
+        </ul>
+      </div>
+
+      <button id="btn-start" class="btn-action">Iniciar Escape Room Clínico</button>
+    </section>
+
+    <!-- PANTALLA DE RETO / PRUEBA ACTIVA -->
+    <section id="screen-challenge" class="card" style="display: none;">
+      <div id="challenge-badge" class="badge badge-blue">Prueba 1 de 5</div>
+      <h2 id="challenge-title" style="font-size: 1.4rem; color: #f8fafc; margin-bottom: 12px;"></h2>
+      
+      <div id="challenge-scenario-box" class="scenario-box"></div>
+      
+      <div id="challenge-question" class="question-title"></div>
+      
+      <div id="options-list" class="options-list"></div>
+
+      <!-- BOTONES DE PISTAS -->
+      <div class="hints-container">
+        <button id="btn-hint1" class="btn-hint">Solicitar Pista 1 (-8 pts)</button>
+        <button id="btn-hint2" class="btn-hint">Solicitar Pista 2 (-15 pts)</button>
+        
+        <div id="hint1-box" class="hint-box"></div>
+        <div id="hint2-box" class="hint-box"></div>
+      </div>
+
+      <!-- PANEL DE FEEDBACK Y CLAVE DE DESBLOQUEO -->
+      <div id="feedback-panel" class="feedback-panel">
+        <div id="fb-title" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 8px;"></div>
+        <div id="fb-text" style="font-size: 0.95rem; margin-bottom: 12px;"></div>
+        <div id="fb-key" class="unlock-key-card" style="display: none;"></div>
+        <div id="fb-source" style="font-size: 0.85rem; font-style: italic; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;"></div>
+      </div>
+
+      <button id="btn-next" class="btn-action" style="display: none;">Avanzar a la Siguiente Prueba</button>
+    </section>
+
+    <!-- PANTALLA FINAL / INFORME DE RESULTADOS -->
+    <section id="screen-final" class="card" style="display: none;">
+      <div class="badge badge-blue">Informe Final de Desempeño</div>
+      <h1 class="title-main" style="text-align: center; margin-top: 10px;">¡Misión Cumplida!</h1>
+      
+      <div style="text-align: center; margin: 20px 0;">
+        <div id="final-score" style="font-size: 3.5rem; font-weight: 900; color: #38bdf8; line-height: 1;">0 / 100</div>
+        <div style="font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-top: 6px;">Puntuación Total Obtenida</div>
+        <div id="final-time" style="font-size: 1rem; color: #cbd5e1; margin-top: 4px;">Tiempo total: 00:00</div>
+      </div>
+
+      <div style="margin: 20px 0;">
+        <h3 style="color: #f8fafc; font-size: 1.1rem; margin-bottom: 10px;">Desglose por Prueba:</h3>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Prueba</th>
+              <th>Tema Clínico</th>
+              <th>Pistas</th>
+              <th>Clave Obtenida</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody id="summary-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="key-takeaways">
+        <h3>Análisis de Aprendizajes Clave (ERC 2025)</h3>
+        <ul id="key-takeaways-list"></ul>
+      </div>
+
+      <button id="btn-restart" class="btn-action">Reiniciar Escape Room</button>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    Material docente. Paciente ficticio. Comprueba dosis y pautas en la versión vigente de las guías. No usar para decisiones con pacientes reales.
+  </footer>
+
+  <!-- SCRIPT CON DATOS Y LÓGICA DEL JUEGO -->
+  <script>
+    /* ==========================================================================
+       DATOS DEL ESCAPE ROOM (GUÍAS ERC 2025)
+       ========================================================================== */
+    const ESCAPE_ROOM_DATA = {
+      meta: {
+        title: "Código Resus 2025: La Guardia de Urgencias",
+        totalChallenges: 5,
+        maxScore: 100
+      },
+      takeaways: [
+        "Reconocimiento precoz sin falsas dudas: La respiración agónica (gasping) es signo de parada cardiaca. Iniciar RCP 30:2 de inmediato.",
+        "Manejo de la FV Refractaria: Tras la 3.ª descarga ineficaz, cambiar la posición de los parches a vector Anteroposterior. La doble desfibrilación secuencial (DSD) se desaconseja de rutina.",
+        "Cardioprotección en hiperpotasemia: Cloruro cálcico al 10% (10 mL) y bicarbonato sódico (50 mmol) por vías separadas para estabilizar el miocardio en AESP.",
+        "SVA Pediátrico: Masajear si FC < 60 ipm con mala perfusión aun con pulso. Vía IO precoz si falla la periférica en < 1 min. Ajustar cristaloides a 10 mL/kg (cambio ERC 2025).",
+        "Cuidados posresucitación: Titular O2 a SpO2 94-98% (evitar hiperoxia), mantener Tª ≤ 37,5 °C y posponer la evaluación pronóstica neurológica multimodal a ≥ 72 horas."
+      ],
+      challenges: [
+        {
+          id: 1,
+          title: "Prueba 1: El colapso en la sala de espera (SVB Adultos)",
+          badgeText: "Prueba 1 de 5 — SVB Adultos",
+          scenario: `UBICACIÓN: Sala de Espera de Urgencias (08:15 h)
+PACIENTE: Varón de 62 años que se desploma repentinamente.
+EXPLORACIÓN: Inconsciente (no responde a estimulo verbal ni doloroso). Presenta movimientos respiratorios lentos, ruidosos y esporádicos (gasping / boqueos agónicos).
+RECURSOS: DEA disponible a 30 segundos en pasillo.`,
+          question: "¿Cuál es la secuencia cronológica inmediata recomendada por el ERC 2025?",
+          hint1: "La respiración agónica o gasping NO debe confundirse con respiración normal; es un signo de parada cardiaca inminente o establecida.",
+          hint2: "Los 3 pasos del ERC 2025 son: 1. Comprobar, 2. Llamar, 3. RCP y DEA (relación 30:2 a 100-120 cpm y 5-6 cm de profundidad).",
+          options: [
+            {
+              text: "Reconocer PCR por inconsciencia y gasping -> Activar SEM / Alerta PCR y pedir DEA -> Iniciar RCP 30:2 y conectar DEA.",
+              correct: true
+            },
+            {
+              text: "Colocar al paciente en Posición Lateral de Seguridad (PLS) y esperar 2 minutos a ver si recupera la respiración normal.",
+              correct: false
+            },
+            {
+              text: "Intentar canalizar acceso venoso periférico antes de iniciar las compresiones torácicas.",
+              correct: false
+            },
+            {
+              text: "Iniciar secuencia 15:2 de compresiones e insuflaciones sin solicitar el DEA.",
+              correct: false
+            }
+          ],
+          explanation: "El ERC 2025 enfatiza que la respiración agónica (gasping) debe interpretarse como signo claro de parada cardiaca. La secuencia inmediata es: Comprobar -> Llamar/Activar -> Iniciar RCP 30:2 de alta calidad y conectar el DEA en cuanto llegue.",
+          source: "ERC 2025: Soporte vital básico en el adulto (págs. 38-40)",
+          unlockKey: "COMPROBAR-LLAMAR-30:2-DEA"
+        },
+        {
+          id: 2,
+          title: "Prueba 2: Ritmo refractario en el Box de Reanimación (SVA Adultos)",
+          badgeText: "Prueba 2 de 5 — SVA Adultos",
+          scenario: `UBICACIÓN: Box de Reanimación / Vitales
+PACIENTE: Varón de 62 años monitorizado.
+MONITOR: Fibrilación Ventricular (FV) persistente tras 3.ª descarga (150 J - 200 J - 200 J) y RCP de alta calidad.
+ACCESOS: Vía venosa periférica en antebrazo derecho permeabilizada.
+VÍA AÉREA: Bolsa-mascarilla con reservorio a 15 L/min.`,
+          question: "¿Qué fármacos administras tras la 3.ª descarga y qué cambio técnico realizas para la FV refractaria?",
+          hint1: "La primera dosis de antiarrítmico y vasopresor en ritmos desfibrilables se administra inmediatamente DESPUÉS de la 3.ª descarga.",
+          hint2: "Administrar Amiodarona 300 mg IV + Adrenalina 1 mg IV. Cambiar parches a vector Anteroposterior. Se desaconseja la Doble Desfibrilación Secuencial (DSD) rutinaria.",
+          options: [
+            {
+              text: "Amiodarona 300 mg IV + Adrenalina 1 mg IV; cambiar parches a posición Anteroposterior (evitando DSD rutinaria).",
+              correct: true
+            },
+            {
+              text: "Atropina 1 mg IV + Adrenalina 1 mg IV; aplicar Doble Desfibrilación Secuencial (DSD) inmediata con dos equipos.",
+              correct: false
+            },
+            {
+              text: "Amiodarona 150 mg IV solamente; mantener parches en posición Anterolateral sin cambiar el vector.",
+              correct: false
+            },
+            {
+              text: "Sulfato de Magnesio 2 g IV + Bicarbonato Sódico; suspender descargas e iniciar perfusión de noradrenalina.",
+              correct: false
+            }
+          ],
+          explanation: "Según las Guías ERC 2025, tras la 3.ª descarga ineficaz en FV se administra Amiodarona 300 mg IV y Adrenalina 1 mg IV. Para abordar la refractariedad, se recomienda modificar el vector cambiando los parches a posición Anteroposterior, desaconsejando la DSD rutinaria.",
+          source: "ERC 2025: Soporte vital avanzado en el adulto (págs. 48, 51)",
+          unlockKey: "AMIODARONA300-ADRENALINA1-VECTOR-AP"
+        },
+        {
+          id: 3,
+          title: "Prueba 3: La urgencia en la unidad de diálisis (Situaciones Especiales)",
+          badgeText: "Prueba 3 de 5 — Hiperpotasemia",
+          scenario: `UBICACIÓN: Box de Reanimación
+PACIENTE: Mujer de 58 años con ERC en hemodiálisis en AESP (38 ipm, QRS ancho).
+LABORATORIO: Potasio sérico (K+) = 7,4 mmol/L (Hiperpotasemia grave).
+ACIDOTE: Acidosis metabólica severa.`,
+          question: "¿Qué pauta farmacológica combinada e inmediata exige el protocolo de Hiperpotasemia del ERC 2025?",
+          hint1: "En parada por hiperpotasemia, la protección de la membrana miocárdica requiere sales de calcio IV junto con bicarbonato sódico.",
+          hint2: "Cloruro Cálcico 10% (10 mL IV) + Bicarbonato Sódico 50 mmol IV (vías separadas) + Insulina 10 UI con Glucosa 25 g IV y Salbutamol.",
+          options: [
+            {
+              text: "Cloruro Cálcico al 10% (10 mL IV) + Bicarbonato Sódico (50 mmol IV por vías separadas) + Insulina 10 UI con Glucosa 25 g IV.",
+              correct: true
+            },
+            {
+              text: "Gluconato Cálcico al 10% (2 mL IV) + Sulfato de Magnesio 5 g IV en infusión lenta de 30 minutos.",
+              correct: false
+            },
+            {
+              text: "Furosemida 80 mg IV en bolo único como tratamiento exclusivo inicial.",
+              correct: false
+            },
+            {
+              text: "Adrenalina 5 mg IV directos sin administrar sales de calcio ni insulina.",
+              correct: false
+            }
+          ],
+          explanation: "En la parada cardiaca por hiperpotasemia grave, el ERC 2025 indica Cloruro Cálcico al 10% (10 mL IV) para estabilizar la membrana cardiaca y Bicarbonato Sódico (50 mmol IV) por vías separadas. Para forzar la entrada de K+ a la célula, se administra Insulina rápida (10 UI) con Glucosa (25 g IV) y Salbutamol.",
+          source: "ERC 2025: Situaciones especiales - Hiperpotasemia (págs. 63-64)",
+          unlockKey: "CLORUROCALCICO-BICARBONATO-INSULINAGLUCOSA"
+        },
+        {
+          id: 4,
+          title: "Prueba 4: Alerta en el box pediátrico (SVA Pediátrico)",
+          badgeText: "Prueba 4 de 5 — SVA Pediátrico",
+          scenario: `UBICACIÓN: Box de Urgencias Pediátricas
+PACIENTE: Lactante de 8 meses (8 kg) con bradicardia a 45 ipm, mala perfusión y shock tras insuficiencia respiratoria.
+VENTILACIÓN: Balón-mascarilla con O2 al 100%.
+ACCESOS: Vía periférica fallida tras 2 intentos en 1 minuto.`,
+          question: "¿Cuáles son las decisiones de RCP, vía de acceso, Adrenalina e hidratación según el ERC 2025?",
+          hint1: "En niños, FC < 60 ipm con mala perfusión obliga a masajear aunque haya pulso. Si la vía IV falla en < 1 min, colocar vía intraósea.",
+          hint2: "Adrenalina 10 µg/kg (0,8 mL de 1:10.000 para 8 kg). La reposición de fluidos en shock se ha actualizado a 10 mL/kg (80 mL para 8 kg).",
+          options: [
+            {
+              text: "Iniciar compresiones (15:2) por FC < 60 con shock -> Acceso Intraóseo (IO) -> Adrenalina 0,8 mL (1:10.000) -> Bolo de fluido de 80 mL (10 mL/kg).",
+              correct: true
+            },
+            {
+              text: "Omite compresiones por tener pulso -> Insistir en vía venosa periférica -> Adrenalina 1 ampolla entera (1 mg) -> Bolo de fluido de 500 mL.",
+              correct: false
+            },
+            {
+              text: "Iniciar compresiones 30:2 -> Disposición de vía arterial -> Atropina 1 mg IV -> Bolo de fluido de 200 mL.",
+              correct: false
+            },
+            {
+              text: "Ventilar únicamente sin masajear -> Esperar a vía central -> Adrenalina 0,08 mL -> Sin fluidos.",
+              correct: false
+            }
+          ],
+          explanation: "El ERC 2025 exige iniciar compresiones si hay bradicardia < 60 ipm con shock aun con pulso. Ante fallo IV en < 1 min, colocar vía IO. Dosis de Adrenalina: 10 µg/kg (0,8 mL de 1:10.000 para 8 kg). Novedad ERC 2025: la expansión hídrica inicial en shock se reduce a 10 mL/kg (80 mL) para evitar sobrecarga.",
+          source: "ERC 2025: Soporte vital pediátrico (págs. 127, 133-134, 138)",
+          unlockKey: "RCP-INTRAOSEA-ADRENALINA0.8ML-FLUIDO80ML"
+        },
+        {
+          id: 5,
+          title: "Prueba 5: El dilema de la UCI y el pronóstico (Cuidados Posresucitación)",
+          badgeText: "Prueba 5 de 5 — Posresucitación",
+          scenario: `UBICACIÓN: Unidad de Cuidados Intensivos (72 h pos-RCE)
+PACIENTE: Varón en coma (Glasgow motor < 6), intubado, sin sedación residual.
+CONSTANTES: PaO2 85 mmHg, PaCO2 40 mmHg, Tª 36,8 °C.`,
+          question: "¿Cuáles son las metas de SpO2 y Tª pos-RCE y la estrategia pronóstica neurológica recomendada?",
+          hint1: "Objetivo de SpO2: 94-98% (evitar hiperoxia). Control de Tª: prevenir fiebre (mantener ≤ 37,5 °C).",
+          hint2: "Evaluación pronóstica a ≥ 72 h tras RCE. Requiere estrategia Multimodal con ≥ 2 predictores (reflejos ausentes, N20 ausente, EEG altamente maligno, NSE > 60 µg/L, TAC/RM).",
+          options: [
+            {
+              text: "SpO2 94-98%; Tª ≤ 37,5 °C; Evaluación pronóstica a ≥ 72 h pos-RCE mediante estrategia Multimodal (mínimo 2 predictores).",
+              correct: true
+            },
+            {
+              text: "SpO2 100% constante; Tª a 32 °C obligatoria 7 días; Pronóstico definitivo a las 12 horas por TAC simple.",
+              correct: false
+            },
+            {
+              text: "SpO2 88-92%; Permitir fiebre hasta 39 °C; Pronóstico a las 24 horas basado únicamente en la respuesta motora.",
+              correct: false
+            },
+            {
+              text: "SpO2 90%; Hipotermia profunda a 28 °C; Retirada de soporte sin necesidad de pruebas multimodales.",
+              correct: false
+            }
+          ],
+          explanation: "Pos-RCE, el ERC 2025 exige titular O2 para SpO2 94-98% (evitando hiperoxia) y prevenir la fiebre (Tª ≤ 37,5 °C). La evaluación pronóstica neurológica en coma no debe realizarse antes de las 72 horas y exige una estrategia Multimodal combinando al menos 2 predictores alterados.",
+          source: "ERC 2025: Cuidados posresucitación y Ética (págs. 83, 86, 88-89, 169)",
+          unlockKey: "SPO2-94-98-FEBRE37.5-MULTIMODAL72H"
+        }
+      ]
+    };
+
+    /* ==========================================================================
+       ESTADO Y LÓGICA DE CONTROL DE LA APLICACIÓN
+       ========================================================================== */
+    let currentIdx = 0;
+    let totalScore = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+
+    // Estado por prueba
+    let challengeState = {
+      hintsUsed: 0, // 0 = sin pistas, 1 = Pista 1, 2 = Pista 2
+      history: []
+    };
+
+    // Elementos DOM
+    const hudProgress = document.getElementById("hud-progress");
+    const hudScore = document.getElementById("hud-score");
+    const hudTimer = document.getElementById("hud-timer");
+
+    const screenWelcome = document.getElementById("screen-welcome");
+    const screenChallenge = document.getElementById("screen-challenge");
+    const screenFinal = document.getElementById("screen-final");
+
+    const btnStart = document.getElementById("btn-start");
+    const btnNext = document.getElementById("btn-next");
+    const btnRestart = document.getElementById("btn-restart");
+
+    const challengeBadge = document.getElementById("challenge-badge");
+    const challengeTitle = document.getElementById("challenge-title");
+    const challengeScenarioBox = document.getElementById("challenge-scenario-box");
+    const challengeQuestion = document.getElementById("challenge-question");
+    const optionsList = document.getElementById("options-list");
+
+    const btnHint1 = document.getElementById("btn-hint1");
+    const btnHint2 = document.getElementById("btn-hint2");
+    const hint1Box = document.getElementById("hint1-box");
+    const hint2Box = document.getElementById("hint2-box");
+
+    const feedbackPanel = document.getElementById("feedback-panel");
+    const fbTitle = document.getElementById("fb-title");
+    const fbText = document.getElementById("fb-text");
+    const fbKey = document.getElementById("fb-key");
+    const fbSource = document.getElementById("fb-source");
+
+    const finalScore = document.getElementById("final-score");
+    const finalTime = document.getElementById("final-time");
+    const summaryTbody = document.getElementById("summary-tbody");
+    const keyTakeawaysList = document.getElementById("key-takeaways-list");
+
+    // Formateador de tiempo
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // Iniciar cronómetro
+    function startTimer() {
+      timerSeconds = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        hudTimer.textContent = formatTime(timerSeconds);
+      }, 1000);
+    }
+
+    // Iniciar juego
+    btnStart.onclick = () => {
+      screenWelcome.style.display = "none";
+      screenChallenge.style.display = "block";
+      currentIdx = 0;
+      totalScore = 0;
+      challengeState.history = [];
+      hudScore.textContent = totalScore;
+      startTimer();
+      loadChallenge(currentIdx);
+    };
+
+    // Cargar prueba activa
+    function loadChallenge(idx) {
+      const data = ESCAPE_ROOM_DATA.challenges[idx];
+      challengeState.hintsUsed = 0;
+
+      // Actualizar HUD
+      hudProgress.textContent = `${idx + 1}/${ESCAPE_ROOM_DATA.meta.totalChallenges}`;
+
+      // Resetear interfaz
+      challengeBadge.textContent = data.badgeText;
+      challengeTitle.textContent = data.title;
+      challengeScenarioBox.textContent = data.scenario;
+      challengeQuestion.textContent = data.question;
+
+      // Pistas
+      btnHint1.disabled = false;
+      btnHint2.disabled = true; // Requiere pedir Pista 1 primero
+      hint1Box.style.display = "none";
+      hint2Box.style.display = "none";
+      hint1Box.textContent = `💡 Pista 1: ${data.hint1}`;
+      hint2Box.textContent = `💡 Pista 2: ${data.hint2}`;
+
+      // Feedback
+      feedbackPanel.style.display = "none";
+      btnNext.style.display = "none";
+
+      // Opciones
+      optionsList.innerHTML = "";
+      data.options.forEach((opt, oIdx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = opt.text;
+        btn.onclick = () => handleSelectOption(idx, oIdx);
+        optionsList.appendChild(btn);
+      });
+    }
+
+    // Manejar solicitud de Pista 1
+    btnHint1.onclick = () => {
+      challengeState.hintsUsed = 1;
+      hint1Box.style.display = "block";
+      btnHint1.disabled = true;
+      btnHint2.disabled = false;
+    };
+
+    // Manejar solicitud de Pista 2
+    btnHint2.onclick = () => {
+      challengeState.hintsUsed = 2;
+      hint2Box.style.display = "block";
+      btnHint2.disabled = true;
+    };
+
+    // Evaluar respuesta seleccionada
+    function handleSelectOption(chIdx, optIdx) {
+      const data = ESCAPE_ROOM_DATA.challenges[chIdx];
+      const selected = data.options[optIdx];
+      const buttons = optionsList.querySelectorAll(".option-btn");
+
+      if (selected.correct) {
+        // Calcular puntos según pistas usadas
+        let pts = 20;
+        if (challengeState.hintsUsed === 1) pts = 12;
+        if (challengeState.hintsUsed === 2) pts = 5;
+
+        totalScore += pts;
+        hudScore.textContent = totalScore;
+
+        // Registrar en historial
+        challengeState.history.push({
+          id: data.id,
+          title: data.title,
+          hintsUsed: challengeState.hintsUsed,
+          key: data.unlockKey,
+          score: pts
+        });
+
+        // Bloquear opciones y marcar correcta
+        buttons.forEach((b, i) => {
+          b.disabled = true;
+          if (i === optIdx) b.classList.add("opt-correct");
+        });
+
+        // Mostrar panel de éxito
+        feedbackPanel.className = "feedback-panel fb-success";
+        fbTitle.textContent = `¡Respuesta Correcta! (+${pts} Puntos)`;
+        fbText.textContent = data.explanation;
+        fbKey.textContent = `🔑 CLAVE DE DESBLOQUEO: ${data.unlockKey}`;
+        fbKey.style.display = "block";
+        fbSource.textContent = `Fuente: ${data.source}`;
+        feedbackPanel.style.display = "block";
+
+        btnNext.style.display = "block";
+      } else {
+        // Marcado de error
+        buttons[optIdx].classList.add("opt-wrong");
+        buttons[optIdx].disabled = true;
+
+        feedbackPanel.className = "feedback-panel fb-error-box";
+        fbTitle.textContent = "❌ Decisión Errónea";
+        fbText.textContent = "Esa medida compromete la seguridad del paciente. Revisa el escenario, solicita una pista si lo precisas y vuelve a intentarlo.";
+        fbKey.style.display = "none";
+        fbSource.textContent = "";
+        feedbackPanel.style.display = "block";
+      }
+    }
+
+    // Botón Siguiente
+    btnNext.onclick = () => {
+      currentIdx++;
+      if (currentIdx < ESCAPE_ROOM_DATA.meta.totalChallenges) {
+        loadChallenge(currentIdx);
+      } else {
+        renderFinalScreen();
+      }
+    };
+
+    // Renderizar pantalla final
+    function renderFinalScreen() {
+      clearInterval(timerInterval);
+      screenChallenge.style.display = "none";
+
+      finalScore.textContent = `${totalScore} / 100`;
+      finalTime.textContent = `Tiempo total de la prueba: ${formatTime(timerSeconds)}`;
+
+      // Poblar tabla resumen
+      summaryTbody.innerHTML = "";
+      challengeState.history.forEach(item => {
+        const tr = document.createElement("tr");
+        let hintLabel = "Sin Pistas";
+        if (item.hintsUsed === 1) hintLabel = "Pista 1 (-8)";
+        if (item.hintsUsed === 2) hintLabel = "Pista 2 (-15)";
+
+        tr.innerHTML = `
+          <td><strong>Prueba ${item.id}</strong></td>
+          <td>${item.title.split('—')[1] || item.title}</td>
+          <td>${hintLabel}</td>
+          <td style="font-family:monospace; font-weight:700; color:#38bdf8;">${item.key}</td>
+          <td style="font-weight:800; text-align:center;">${item.score} pts</td>
+        `;
+        summaryTbody.appendChild(tr);
+      });
+
+      // Poblar Takeaways
+      keyTakeawaysList.innerHTML = "";
+      ESCAPE_ROOM_DATA.takeaways.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        keyTakeawaysList.appendChild(li);
+      });
+
+      screenFinal.style.display = "block";
+    }
+
+    // Botón Reiniciar
+    btnRestart.onclick = () => {
+      screenFinal.style.display = "none";
+      screenWelcome.style.display = "block";
+      hudProgress.textContent = "0/5";
+      hudScore.textContent = "0";
+      hudTimer.textContent = "00:00";
+    };
+  </script>
+</body>
+</html>
