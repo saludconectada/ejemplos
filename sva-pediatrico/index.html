@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caso Clínico Docente: SVAP - ERC 2025</title>
+  <style>
+    /* ==========================================================================
+       ESTILOS GENERALES Y DISEÑO CLÍNICO SOBRIO
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* ==========================================================================
+       MONITOR DE CONSTANTES FIJO (STICKY HEADER)
+       ========================================================================== */
+    .monitor-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-bottom: 3px solid #334155;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .monitor-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .vital-card {
+      background-color: #1e293b;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      text-align: center;
+    }
+
+    .vital-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+      font-weight: 700;
+    }
+
+    .vital-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    /* Colores estado clínico */
+    .val-normal { color: #4ade80; }
+    .val-altered { color: #fbbf24; }
+    .val-critical { color: #f87171; }
+
+    /* Adaptación pantallas estrechas */
+    @media (max-width: 640px) {
+      .vitals-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .vital-value {
+        font-size: 1.3rem;
+      }
+    }
+
+    /* ==========================================================================
+       CONTENEDOR PRINCIPAL Y BARRA DE PROGRESO
+       ========================================================================== */
+    .main-container {
+      max-width: 800px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .progress-wrapper {
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #2563eb;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ==========================================================================
+       TARJETAS DE CONTENIDO Y FICHA TÉCNICA
+       ========================================================================== */
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      background-color: #f1f5f9;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin: 16px 0;
+    }
+
+    .info-item strong {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #475569;
+    }
+
+    .info-item span {
+      font-size: 0.95rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .objectives-list {
+      padding-left: 20px;
+      margin: 12px 0 20px 0;
+      color: #334155;
+    }
+
+    .objectives-list li {
+      margin-bottom: 8px;
+    }
+
+    .scene-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 4px;
+      margin-bottom: 14px;
+    }
+
+    .badge-decision {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-rescue {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .scene-text {
+      font-size: 1.05rem;
+      color: #334155;
+      margin-bottom: 20px;
+      white-space: pre-line;
+    }
+
+    .question-text {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 18px;
+      border-left: 4px solid #2563eb;
+      padding-left: 12px;
+    }
+
+    /* Opciones de respuesta */
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      text-align: left;
+      background-color: #ffffff;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1rem;
+      color: #1e293b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: #2563eb;
+      background-color: #f8fafc;
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    /* Marcado de respuestas */
+    .opt-selected.opt-correcta {
+      border-color: #16a34a !important;
+      background-color: #f0fdf4 !important;
+      font-weight: 600;
+    }
+
+    .opt-selected.opt-aceptable {
+      border-color: #d97706 !important;
+      background-color: #fffbeb !important;
+      font-weight: 600;
+    }
+
+    .opt-selected.opt-error {
+      border-color: #dc2626 !important;
+      background-color: #fef2f2 !important;
+      font-weight: 600;
+    }
+
+    .opt-correct-recommended {
+      border: 2px dashed #16a34a !important;
+      background-color: #f0fdf4 !important;
+    }
+
+    /* ==========================================================================
+       PANEL DE EXPLICACIÓN Y CONSECUENCIAS
+       ========================================================================== */
+    .feedback-panel {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 5px solid;
+      display: none;
+    }
+
+    .fb-correcta {
+      background-color: #f0fdf4;
+      border-color: #16a34a;
+      color: #14532d;
+    }
+
+    .fb-aceptable {
+      background-color: #fffbeb;
+      border-color: #d97706;
+      color: #78350f;
+    }
+
+    .fb-error {
+      background-color: #fef2f2;
+      border-color: #dc2626;
+      color: #7f1d1d;
+    }
+
+    .fb-title {
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .fb-section {
+      margin-bottom: 10px;
+      font-size: 0.98rem;
+    }
+
+    .fb-section strong {
+      display: block;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      opacity: 0.85;
+    }
+
+    .fb-source {
+      font-size: 0.85rem;
+      font-style: italic;
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-next {
+      margin-top: 16px;
+      padding: 12px 24px;
+      background-color: #0f172a;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-next:hover {
+      background-color: #1e293b;
+    }
+
+    /* ==========================================================================
+       PANTALLA FINAL Y RESUMEN
+       ========================================================================== */
+    .final-screen {
+      display: none;
+    }
+
+    .score-card {
+      text-align: center;
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 24px;
+    }
+
+    .score-number {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #2563eb;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .score-label {
+      font-size: 1rem;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #ffffff;
+      font-size: 0.9rem;
+      border: 1px solid #cbd5e1;
+    }
+
+    .summary-table th, .summary-table td {
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .summary-table th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .key-messages-card {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 24px 0;
+    }
+
+    .key-messages-card h3 {
+      color: #1e3a8a;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .key-messages-card ul {
+      padding-left: 20px;
+      color: #1e40af;
+    }
+
+    .key-messages-card li {
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       PIE DE PÁGINA DOCENTE
+       ========================================================================== */
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 40px;
+      padding: 20px 16px 0 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MONITOR FIJO SUPERIOR CON CONSTANTES VITALES -->
+  <header class="monitor-header">
+    <div class="monitor-meta">
+      <span id="mon-location">PAC / Urgencias AP</span>
+      <span id="mon-patient">Paciente: Hugo (8 meses, 8 kg)</span>
+      <span id="mon-time">Hora: 11:30</span>
+    </div>
+    <div class="vitals-grid">
+      <div class="vital-card">
+        <div class="vital-label">FC (ipm)</div>
+        <div class="vital-value" id="val-fc">52</div>
+      </div>
+      <div class="vital-card">
+        <div class="vital-label">Sat O₂ (%)</div>
+        <div class="vital-value" id="val-sat">62</div>
+      </div>
+      <div class="vital-card">
+        <div class="vital-label">FR (rpm)</div>
+        <div class="vital-value" id="val-fr">6</div>
+      </div>
+      <div class="vital-card">
+        <div class="vital-label">TA (mmHg)</div>
+        <div class="vital-value" id="val-ta">Indetect.</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="main-container">
+
+    <!-- PANTALLA INICIAL / PRESENTACIÓN DEL CASO -->
+    <section id="welcome-screen" class="card">
+      <div class="scene-badge badge-decision">Caso Clínico Docente • SVAP ERC 2025</div>
+      <h1 class="card-title">El lactante hipotónico: cuando la bradicardia exige compresiones</h1>
+      
+      <p style="color: #475569; font-size: 1rem; margin-bottom: 12px;">
+        Caso interactivo de decisiones ramificadas basado estrictamente en las Recomendaciones del <em>European Resuscitation Council (ERC) 2025</em>.
+      </p>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <strong>Lugar de asistencia</strong>
+          <span>PAC / Urgencias de Atención Primaria</span>
+        </div>
+        <div class="info-item">
+          <strong>Paciente ficticio</strong>
+          <span>Hugo, 8 meses (8 kg de peso)</span>
+        </div>
+        <div class="info-item">
+          <strong>Motivo de consulta</strong>
+          <span>Insuficiencia respiratoria y somnolencia</span>
+        </div>
+        <div class="info-item">
+          <strong>Público objetivo</strong>
+          <span>Medicina, Enfermería y Farmacia</span>
+        </div>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <h3 style="font-size: 1rem; color: #0f172a; margin-bottom: 6px;">Escenario clínico inicial:</h3>
+        <p style="color: #334155; font-size: 0.98rem; line-height: 1.4;">
+          El lactante acude en brazos de su madre por dificultad respiratoria progresiva de 24 horas de evolución, rechazo de tomas y somnolencia creciente. A su llegada al box de triaje, se muestra hipotónico, somnoliento, cianótico y con boqueos agónicos.
+        </p>
+      </div>
+
+      <div style="margin: 16px 0;">
+        <h3 style="font-size: 1rem; color: #0f172a; margin-bottom: 6px;">Objetivos docentes del caso:</h3>
+        <ul class="objectives-list">
+          <li>Aplicar la secuencia pediátrica específica (5 ventilaciones de rescate e inicio con relación 15:2).</li>
+          <li>Identificar la indicación de compresiones torácicas en bradicardia pediátrica (< 60 ipm con mala perfusión) aunque exista pulso central.</li>
+          <li>Establecer un acceso intraóseo precoz y calcular la dosis exacta de Adrenalina IV/IO (10 µg/kg).</li>
+        </ul>
+      </div>
+
+      <button id="btn-start-case" class="btn-primary">Comenzar Simulación Clínica</button>
+    </section>
+    
+    <!-- BARRA DE PROGRESO -->
+    <div id="progress-wrapper" class="progress-wrapper">
+      <div class="progress-info">
+        <span id="progress-text">Decisión 1 de 5</span>
+        <span id="progress-percent">20%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- TARJETA DE ESCENA / DECISIÓN ACTIVA -->
+    <section id="scene-card" class="card" style="display: none;">
+      <div id="scene-badge" class="scene-badge badge-decision">Decisión 1 de 5</div>
+      <div id="scene-text" class="scene-text"></div>
+      <div id="scene-question" class="question-text"></div>
+      <div id="options-list" class="options-list"></div>
+
+      <!-- PANEL DE FEEDBACK / EXPLICACIÓN -->
+      <div id="feedback-panel" class="feedback-panel">
+        <div id="fb-title" class="fb-title"></div>
+        <div id="fb-consequence" class="fb-section"></div>
+        <div id="fb-explanation" class="fb-section"></div>
+        <div id="fb-source" class="fb-source"></div>
+        <button id="btn-next" class="btn-next">Continuar</button>
+      </div>
+    </section>
+
+    <!-- PANTALLA FINAL -->
+    <section id="final-screen" class="final-screen">
+      <div class="score-card">
+        <div id="final-score-num" class="score-number">0 / 10</div>
+        <div class="score-label">Puntuación Final Obtenida</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom: 14px; color: #0f172a;">Resumen de Decisiones del Caso</h3>
+        <div class="table-container">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>Decisión</th>
+                <th>Tu Elección</th>
+                <th>Opción Recomendada (ERC 2025)</th>
+                <th>Puntos</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="key-messages-card">
+        <h3>Mensajes Clave del Caso</h3>
+        <ul id="key-messages-list"></ul>
+      </div>
+
+      <button id="btn-restart" class="btn-primary">Reiniciar Simulación Clínica</button>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA DOCENTE -->
+  <footer class="footer">
+    <p>Material docente. Paciente ficticio. Comprueba dosis y pautas en la versión vigente de las guías. No usar para decisiones con pacientes reales.</p>
+  </footer>
+
+  <!-- LÓGICA Y DATOS DEL CASO CLÍNICO -->
+  <script>
+    /* ==========================================================================
+       OBJETO ÚNICO DE DATOS DEL CASO CLÍNICO (ERC 2025)
+       ========================================================================== */
+    const CASE_DATA = {
+      meta: {
+        title: "El lactante hipotónico: cuando la bradicardia exige compresiones",
+        patient: "Hugo (8 meses, 8 kg)",
+        location: "PAC / Urgencias AP",
+        initialTime: "11:30"
+      },
+      keyMessages: [
+        "En pediatría, la bradicardia < 60 ipm con mala perfusión SE MASAJA: No esperes a la asistolia. Si el lactante tiene bradicardia con signos de shock a pesar de ventilar con oxígeno, las compresiones torácicas son obligatorias aunque palpes pulso.",
+        "Secuencia pediátrica específica (5 ventilaciones + 15:2): La causa primaria es respiratoria/anóxica. Airear los pulmones con 5 ventilaciones de rescate y mantener la relación 15:2 con la técnica de los dos pulgares es la intervención con mayor impacto en la supervivencia.",
+        "Cálculo riguroso de Adrenalina y vía IO precoz: Ante el fallo del acceso venoso en < 1 minuto, no demores la vía intraósea. Administra exactamente 10 µg/kg (0,1 mL/kg de la dilución 1:10.000); los errores decimales en niños son letales."
+      ],
+      scenes: {
+        "scene_1": {
+          isRescue: false,
+          decisionNumber: 1,
+          totalDecisions: 5,
+          badgeText: "Decisión 1 de 5 — Entrada y valoración inicial",
+          text: "Ingresas a la sala de triaje tras el aviso de la enfermera. La madre sostiene a Hugo (8 meses, 8 kg) en brazos. El lactante se muestra flácido, somnoliento, cianótico a nivel acra y central, con esfuerzo respiratorio ineficaz y boqueos intermitentes. No reacciona a la llamada ni a la estimulación táctil.",
+          question: "¿Cuál es la secuencia inicial de actuación recomendada?",
+          vitalsAfter: [
+            { fc: 48, fr: 15, sat: 70, ta: "Indetect." }, // Opción A
+            { fc: 48, fr: 25, sat: 70, ta: "Indetect." }, // Opción B
+            { fc: 0, fr: 0, sat: 45, ta: "Indetect." }     // Opción C (Rescue 1)
+          ],
+          options: [
+            {
+              text: "Abrir la vía aérea en posición neutra y administrar 5 ventilaciones de rescate iniciales con balón-mascarilla y O2 al 100%.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se airean los alvéolos colapsados por la hipoxia. El tórax se eleva eficazmente, pero la FC persiste en 48 ipm.",
+              explanation: "Las guías ERC 2025 establecen que la parada en pediatría es predominantemente anóxica. Se debe iniciar con 5 ventilaciones de rescate antes de las compresiones.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127; Fig. 9, pág. 42)",
+              nextScene: "scene_2"
+            },
+            {
+              text: "Iniciar directamente ventilación asistida a ritmo continuo de 25 resp/min sin el bloque inicial de 5 ventilaciones de rescate.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "El niño recibe oxigenación, pero se pierde el efecto de insuflación inicial para abrir la vía aérea colapsada y evaluar eficacia.",
+              explanation: "Aportar oxigenación ayuda, pero el ERC 2025 recomienda iniciar específicamente con las 5 ventilaciones de rescate iniciales diferenciadas.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127)",
+              nextScene: "scene_2"
+            },
+            {
+              text: "Iniciar inmediatamente compresiones torácicas con secuencia de adulto (30:2) sin realizar ventilaciones de rescate previas.",
+              qualification: "error",
+              points: 0,
+              consequence: "El masaje sobre un pulmón no ventilado y anóxico empeora la hipoxia miocárdica; la FC cae a 0 ipm y el lactante entra en asistolia.",
+              explanation: "Las compresiones sin ventilación previa aumentan la anoxia miocárdica en niños y aceleran el colapso cardiaco.",
+              source: "ERC 2025: Soporte vital básico pediátrico (pág. 127)",
+              nextScene: "rescue_1"
+            }
+          ]
+        },
+        "rescue_1": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Asistolia por hipoxia refractaria",
+          text: "El lactante ha entrado en asistolia por anoxia tras iniciar masaje sin ventilar. El monitor muestra una línea isoeléctrica (FC 0 ipm, SatO2 45%). Se requiere una acción de rescate inmediata para recuperar la vía aérea.",
+          question: "¿Qué medida de rescate aplicas de inmediato?",
+          vitalsAfter: [
+            { fc: 48, fr: 15, sat: 70, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Detener compresiones, colocar vía aérea en posición neutra, cánula orofaríngea, 5 insuflaciones de rescate efectivas con O2 al 100% y reanudar RCP 15:2.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La insuflación de O2 rescata la oxigenación miocárdica mínima, retornando el ritmo a bradicardia a 48 ipm.",
+              explanation: "Es indispensable revertir la anoxia ventilando adecuadamente con O2 antes de mantener las compresiones.",
+              source: "ERC 2025: Algoritmo de Rescate en SVAP (pág. 127)",
+              nextScene: "scene_2"
+            }
+          ]
+        },
+        "scene_2": {
+          isRescue: false,
+          decisionNumber: 2,
+          totalDecisions: 5,
+          badgeText: "Decisión 2 de 5 — Reevaluación circulatoria tras ventilación",
+          text: "Tras administrar las ventilaciones de rescate efectivas, mantienes la ventilación con balón-mascarilla. La enfermera comprueba el pulso central (branquial/femoral) en menos de 10 segundos: se palpa pulso muy débil y lento (48 ipm). El lactante sigue pálido y marmoleado.",
+          question: "¿Cuál es la indicación hemodinámica ante este hallazgo?",
+          vitalsAfter: [
+            { fc: 42, fr: 15, sat: 74, ta: "Indetect." }, // Opción A
+            { fc: 30, fr: 15, sat: 65, ta: "Indetect." }, // Opción B
+            { fc: 25, fr: 15, sat: 50, ta: "Indetect." }  // Opción C (Rescue 2)
+          ],
+          options: [
+            {
+              text: "Iniciar compresiones torácicas inmediatamente (relación 15:2, 2 pulgares) por bradicardia < 60 ipm con mala perfusión.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se genera perfusión coronaria y cerebral crítica. La perfusión tisular comienza a mejorar levemente.",
+              explanation: "El ERC 2025 exige iniciar compresiones torácicas si la FC es < 60 ipm con signos de mala perfusión a pesar de ventilar, aunque se palpe pulso.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 133; Fig. 29)",
+              nextScene: "scene_3"
+            },
+            {
+              text: "Continuar únicamente con ventilación de rescate durante 2 minutos más antes de reevaluar, esperando que el O2 suba la FC.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Al no aportar soporte inotrópico mecánico con FC < 60 ipm, el gasto cardiaco sigue siendo insuficiente y la bradicardia cae a 30 ipm.",
+              explanation: "Esperar sin masajear cuando hay mala perfusión agrava la bradicardia e induce colapso circulatorio.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 133)",
+              nextScene: "scene_3"
+            },
+            {
+              text: "Administrar Atropina IV/IO en bolo (20 µg/kg) argumentando un probable tono vagal, sin iniciar compresiones torácicas.",
+              qualification: "error",
+              points: 0,
+              consequence: "La atropina es ineficaz en la bradicardia por hipoxia y retrasa el soporte mecánico circulatorio indispensable, precipitando la AESP.",
+              explanation: "La atropina no está indicada en la bradicardia hipóxica del lactante; solo en hipertonía vagal o bloqueos primarios.",
+              source: "ERC 2025: Manejo de la bradicardia pediátrica (pág. 124)",
+              nextScene: "rescue_2"
+            }
+          ]
+        },
+        "rescue_2": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Colapso en AESP tras retrasar compresiones",
+          text: "El paciente no responde a la atropina y pierde el pulso central. El monitor muestra Actividad Eléctrica Sin Pulso (AESP) a 25 ipm.",
+          question: "¿Cómo reanimas hemodinámicamente al paciente?",
+          vitalsAfter: [
+            { fc: 42, fr: 15, sat: 74, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Iniciar compresiones torácicas inmediatas (técnica de 2 pulgares, 1/3 diámetro AP, 100-120/min) coordinando la relación 15:2.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "El masaje mecánico restablece la presión de perfusión coronaria mínima recuperando pulso palpable a 42 ipm.",
+              explanation: "Iniciar compresiones torácicas es la única medida efectiva para restaurar el gasto cardiaco en AESP o bradicardia grave.",
+              source: "ERC 2025: Algoritmo SVAP (pág. 133)",
+              nextScene: "scene_3"
+            }
+          ]
+        },
+        "scene_3": {
+          isRescue: false,
+          decisionNumber: 3,
+          totalDecisions: 5,
+          badgeText: "Decisión 3 de 5 — El Giro: Acceso vascular y fármacos",
+          text: "Iniciada la RCP 15:2, la enfermera intenta canalizar una vía venosa periférica. Tras dos intentos fallidos en menos de 1 minuto por colapso vascular, el equipo no tiene acceso. Se precisa Adrenalina para ritmo no desfibrilable (8 kg).",
+          question: "¿Qué vía de acceso eliges y qué dosis de Adrenalina indicas?",
+          vitalsAfter: [
+            { fc: 55, fr: 15, sat: 81, ta: "Indetect." }, // Opción A
+            { fc: 40, fr: 15, sat: 70, ta: "Indetect." }, // Opción B
+            { fc: 210, fr: 15, sat: 60, ta: "Indetect." }  // Opción C (Rescue 3)
+          ],
+          options: [
+            {
+              text: "Insertar vía intraósea (IO) en tibia proximal y administrar Adrenalina 10 µg/kg IV/IO (0,08 mg = 0,8 mL de 1:10.000).",
+              qualification: "correcta",
+              points: 2,
+              consequence: "La dosis exacta por vía IO llega rápidamente a la circulación central, aumentando la presión de perfusión coronaria sin toxicidad.",
+              explanation: "Si falla el acceso IV en < 1 min, se establece vía IO. Dosis: 10 µg/kg (0,1 mL/kg de dilución 1:10.000) lo antes posible en ritmos no desfibrilables.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico - Fármacos (pág. 134; Fig. 29)",
+              nextScene: "scene_4"
+            },
+            {
+              text: "Intentar un tercer acceso venoso periférico en yugular externa o femoral antes de recurrir a la vía intraósea.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Se demora la administración de adrenalina en un ritmo no desfibrilable más de 4 minutos, perdiendo el beneficio precoz.",
+              explanation: "No se debe retrasar la adrenalina en ritmos no desfibrilables por insistir en accesos venosos periféricos difíciles.",
+              source: "ERC 2025: Soporte vital avanzado pediátrico (pág. 134)",
+              nextScene: "scene_4"
+            },
+            {
+              text: "Administrar 1 ampolla entera de Adrenalina de adulto (1 mg) por vía IO o equivocarse administrando 100 µg/kg (error decimal por 10).",
+              qualification: "error",
+              points: 0,
+              consequence: "La sobredosis masiva provoca Taquicardia Ventricular sin pulso a 210 ipm e isquemia miocárdica iatrogénica.",
+              explanation: "Los errores decimales de dosificación en pediatría causan arritmias letales y vasoconstricción periférica extrema.",
+              source: "ERC 2025: Errores de medicación en SVAP (pág. 134)",
+              nextScene: "rescue_3"
+            }
+          ]
+        },
+        "rescue_3": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Taquicardia Ventricular sin pulso por sobredosis",
+          text: "El monitor muestra una Taquicardia Ventricular sin pulso a 210 ipm tras la administración accidental de dosis excessive de adrenalina.",
+          question: "¿Cómo manejas esta arritmia letal inducida?",
+          vitalsAfter: [
+            { fc: 55, fr: 15, sat: 81, ta: "Indetect." }
+          ],
+          options: [
+            {
+              text: "Detener vasoactivos, cargar desfibrilador manual a 4 J/kg (32 J para 8 kg), retirar O2 ambiente, aplicar 1 descarga y reanudar RCP 15:2 por 2 min.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La desfibrilación a 4 J/kg desfibrila el miocardio y la RCP restablece un ritmo organizado a 55 ipm.",
+              explanation: "La TV sin pulso requiere desfibrilación inmediata a 4 J/kg seguida de 2 minutos de RCP de alta calidad.",
+              source: "ERC 2025: Desfibrilación en SVAP (pág. 135)",
+              nextScene: "scene_4"
+            }
+          ]
+        },
+        "scene_4": {
+          isRescue: false,
+          decisionNumber: 4,
+          totalDecisions: 5,
+          badgeText: "Decisión 4 de 5 — Manejo avanzado de la vía aérea",
+          text: "Lleváis 4 minutos de RCP (2 ciclos), se ha administrado Adrenalina IO y mantenéis ventilación con balón-mascarilla. La enfermera advierte distensión gástrica progresiva y fuga por la mascarilla. Un médico sugiere intubar inmediatamente.",
+          question: "¿Cuál es la estrategia recomendada para la vía aérea en este momento?",
+          vitalsAfter: [
+            { fc: 138, fr: 36, sat: 100, ta: "78/46" }, // Opción A (RCE)
+            { fc: 110, fr: 30, sat: 95, ta: "70/40" },  // Opción B
+            { fc: 30, fr: 0, sat: 45, ta: "Indetect." }   // Opción C (Rescue 4)
+          ],
+          options: [
+            {
+              text: "Optimizar balón-mascarilla a 2 personas con cánula orofaríngea (o insertar DSG i-gel). Intubar solo si hay personal experto, con tubo con balón y pausa < 5-10s.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se asegura la ventilación sin interrumpir el flujo sanguíneo coronario. El paciente recupera circulación espontánea (RCE).",
+              explanation: "En SVAP se recomienda intubar solo si hay un experto capacitado, usando tubos con balón y reduciendo pausas a < 5-10s. De lo contrario, balón-mascarilla a 2 personas o DSG.",
+              source: "ERC 2025: Oxigenación y Vía Aérea en SVAP (pág. 117, 136-137)",
+              nextScene: "scene_5"
+            },
+            {
+              text: "Insertar una mascarilla laríngea / DSG, pero detener por completo las compresiones torácicas durante todo el procedimiento de inserción y fijación.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "Se logra la vía aérea, pero la pausa del masaje (> 20s) provoca una caída severa de la presión de perfusión coronaria.",
+              explanation: "Las pausas prolongadas en las compresiones reducen drásticamente la tasa de RCE.",
+              source: "ERC 2025: Control de pausas en RCP (pág. 136)",
+              nextScene: "scene_5"
+            },
+            {
+              text: "Interrumpir compresiones > 45 segundos para realizar intentos repetidos de intubación endotraqueal directa sin balón por personal no experimentado.",
+              qualification: "error",
+              points: 0,
+              consequence: "Hipoxia crítica sobreañadida e interrupción del gasto cardiaco que provocan un nuevo colapso hemodinámico.",
+              explanation: "Está totalmente desaconsejado pausar el masaje > 10 segundos para intubar si no se domina la técnica.",
+              source: "ERC 2025: Manejo de vía aérea en pediatría (pág. 136)",
+              nextScene: "rescue_4"
+            }
+          ]
+        },
+        "rescue_4": {
+          isRescue: true,
+          badgeText: "Escena de Rescate — Desaturación severa por intubación prolongada",
+          text: "El intento de intubación prolongado causa desaturación al 45% y el ETCO2 cae a 8 mmHg con bradicardia severa a 30 ipm.",
+          question: "¿Cómo recuperas la oxigenación y perfusión?",
+          vitalsAfter: [
+            { fc: 138, fr: 36, sat: 100, ta: "78/46" }
+          ],
+          options: [
+            {
+              text: "Retirar laringoscopio, reanudar compresiones continuas y ventilar con balón-mascarilla a 2 personas con O2 al 100% hasta recuperar RCE.",
+              qualification: "correcta",
+              points: 0,
+              consequence: "La ventilación efectiva a 2 personas restablece el intercambio gaseoso logrando la RCE a 138 ipm.",
+              explanation: "Retornar al balón-mascarilla efectivo es la medida de rescate primaria ante el fallo de intubación.",
+              source: "ERC 2025: Algoritmo de Rescate en Vía Aérea (pág. 136)",
+              nextScene: "scene_5"
+            }
+          ]
+        },
+        "scene_5": {
+          isRescue: false,
+          decisionNumber: 5,
+          totalDecisions: 5,
+          badgeText: "Decisión 5 de 5 — Cuidados Posresucitación (RCE)",
+          text: "Hugo presenta tos, movimientos espontáneos y llanto débil. RCE confirmada: FC 138 ipm sinusal, TA 78/46 mmHg, SatO2 100% (con O2 100%). Glucemia capilar: 42 mg/dL. Temp: 36,1 °C.",
+          question: "¿Cuáles son las prioridades terapéuticas en esta fase pos-RCE inmediata?",
+          vitalsAfter: [
+            { fc: 125, fr: 30, sat: 96, ta: "82/50" }, // Opción A
+            { fc: 130, fr: 32, sat: 100, ta: "80/48" }, // Opción B
+            { fc: 150, fr: 45, sat: 99, ta: "90/55" }   // Opción C
+          ],
+          options: [
+            {
+              text: "Titular FiO2 para SatO2 94-98% (evitar hiperoxia), normocapnia, bolo IV/IO de Glucosa al 10% (2 mL/kg = 0,2 g/kg) y prevenir hipertermia.",
+              qualification: "correcta",
+              points: 2,
+              consequence: "Se protege el cerebro postisquémico evitando toxicidad por hiperoxia, se normaliza la glucemia y se estabiliza la función cardiovascular.",
+              explanation: "Tras la RCE se debe titular O2 a SpO2 94-98%, corregir la hipoglucemia (< 70 mg/dL) con 2 mL/kg de Glucosa 10% y prevenir la fiebre.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 139, 152-153; Fig. 30)",
+              nextScene: "final"
+            },
+            {
+              text: "Mantener ventilación con O2 al 100% indefinidamente por seguridad y diferir la corrección de glucemia hasta la llegada del equipo de trasplante/UVI.",
+              qualification: "aceptable",
+              points: 1,
+              consequence: "La hiperoxia prolongada genera radicales libres que agravan la lesión cerebral pos-parada y la hipoglucemia mantenida arriesga deterioro neurológico.",
+              explanation: "La hiperoxia descontrolada y la hipoglucemia mantenida aumentan la morbimortalidad neurológica.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 153)",
+              nextScene: "final"
+            },
+            {
+              text: "Administrar Suero Glucosado al 50% concentrado sin diluir e hiperventilar al lactante para lograr un ETCO2 < 25 mmHg.",
+              qualification: "error",
+              points: 0,
+              consequence: "La hiperosmolaridad severa y la vasoconstricción cerebral por hipocapnia provocan daño neurológico secundario e inducen convulsiones.",
+              explanation: "Está contraindicado el uso de glucosa hipertónica concentrada e hiperventilación profiláctica en pos-RCE.",
+              source: "ERC 2025: Cuidados posresucitación en pediatría (pág. 153)",
+              nextScene: "final"
+            }
+          ]
+        }
+      }
+    };
+
+    /* ==========================================================================
+       LÓGICA DEL JUEGO Y CONTROL DEL ESTADO
+       ========================================================================== */
+    let currentSceneKey = "scene_1";
+    let userHistory = [];
+    let totalScore = 0;
+
+    // Elementos DOM
+    const valFc = document.getElementById("val-fc");
+    const valSat = document.getElementById("val-sat");
+    const valFr = document.getElementById("val-fr");
+    const valTa = document.getElementById("val-ta");
+
+    const welcomeScreen = document.getElementById("welcome-screen");
+    const btnStartCase = document.getElementById("btn-start-case");
+
+    const progressWrapper = document.getElementById("progress-wrapper");
+    const progressText = document.getElementById("progress-text");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressBarFill = document.getElementById("progress-bar-fill");
+
+    const sceneCard = document.getElementById("scene-card");
+    const sceneBadge = document.getElementById("scene-badge");
+    const sceneText = document.getElementById("scene-text");
+    const sceneQuestion = document.getElementById("scene-question");
+    const optionsList = document.getElementById("options-list");
+
+    const feedbackPanel = document.getElementById("feedback-panel");
+    const fbTitle = document.getElementById("fb-title");
+    const fbConsequence = document.getElementById("fb-consequence");
+    const fbExplanation = document.getElementById("fb-explanation");
+    const fbSource = document.getElementById("fb-source");
+    const btnNext = document.getElementById("btn-next");
+
+    const finalScreen = document.getElementById("final-screen");
+    const finalScoreNum = document.getElementById("final-score-num");
+    const summaryTbody = document.getElementById("summary-tbody");
+    const keyMessagesList = document.getElementById("key-messages-list");
+    const btnRestart = document.getElementById("btn-restart");
+
+    // Inicialización del juego
+    function initGame() {
+      currentSceneKey = "scene_1";
+      userHistory = [];
+      totalScore = 0;
+      
+      finalScreen.style.display = "none";
+      sceneCard.style.display = "none";
+      progressWrapper.style.display = "none";
+      welcomeScreen.style.display = "block";
+
+      // Cargar constantes iniciales
+      updateVitals(52, 62, 6, "Indetect.");
+    }
+
+    // Iniciar caso desde la pantalla inicial
+    btnStartCase.onclick = () => {
+      welcomeScreen.style.display = "none";
+      progressWrapper.style.display = "block";
+      sceneCard.style.display = "block";
+      renderScene(currentSceneKey);
+    };
+
+    // Actualizar monitor de constantes y aplicar colores
+    function updateVitals(fc, sat, fr, ta) {
+      valFc.textContent = fc;
+      valSat.textContent = sat;
+      valFr.textContent = fr;
+      valTa.textContent = ta;
+
+      // Colores FC
+      if (fc < 60 || fc > 180) {
+        valFc.className = "vital-value val-critical";
+      } else if (fc < 90 || fc > 160) {
+        valFc.className = "vital-value val-altered";
+      } else {
+        valFc.className = "vital-value val-normal";
+      }
+
+      // Colores SatO2
+      if (sat < 90) {
+        valSat.className = "vital-value val-critical";
+      } else if (sat < 94) {
+        valSat.className = "vital-value val-altered";
+      } else {
+        valSat.className = "vital-value val-normal";
+      }
+
+      // Colores FR
+      if (fr < 12 || fr > 60) {
+        valFr.className = "vital-value val-critical";
+      } else if (fr < 20 || fr > 50) {
+        valFr.className = "vital-value val-altered";
+      } else {
+        valFr.className = "vital-value val-normal";
+      }
+
+      // Colores TA
+      if (ta === "Indetect." || ta.startsWith("0/")) {
+        valTa.className = "vital-value val-critical";
+      } else if (parseInt(ta) < 75) {
+        valTa.className = "vital-value val-altered";
+      } else {
+        valTa.className = "vital-value val-normal";
+      }
+    }
+
+    // Renderizar escena activa
+    function renderScene(sceneKey) {
+      const scene = CASE_DATA.scenes[sceneKey];
+      if (!scene) return;
+
+      // Ocultar panel feedback
+      feedbackPanel.style.display = "none";
+
+      // Badge y progreso
+      if (scene.isRescue) {
+        sceneBadge.className = "scene-badge badge-rescue";
+        sceneBadge.textContent = scene.badgeText;
+      } else {
+        sceneBadge.className = "scene-badge badge-decision";
+        sceneBadge.textContent = scene.badgeText;
+
+        const pct = Math.round((scene.decisionNumber / scene.totalDecisions) * 100);
+        progressText.textContent = `Decisión ${scene.decisionNumber} de ${scene.totalDecisions}`;
+        progressPercent.textContent = `${pct}%`;
+        progressBarFill.style.width = `${pct}%`;
+      }
+
+      // Textos
+      sceneText.textContent = scene.text;
+      sceneQuestion.textContent = scene.question;
+
+      // Limpiar y crear opciones
+      optionsList.innerHTML = "";
+      scene.options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = opt.text;
+        btn.onclick = () => selectOption(sceneKey, idx);
+        optionsList.appendChild(btn);
+      });
+    }
+
+    // Manejar selección de opción
+    function selectOption(sceneKey, optionIdx) {
+      const scene = CASE_DATA.scenes[sceneKey];
+      const selectedOpt = scene.options[optionIdx];
+
+      // Bloquear botones
+      const buttons = optionsList.querySelectorAll(".option-btn");
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+
+        if (idx === optionIdx) {
+          btn.classList.add("opt-selected", `opt-${selectedOpt.qualification}`);
+        } else if (selectedOpt.qualification !== "correcta" && scene.options[idx].qualification === "correcta") {
+          btn.classList.add("opt-correct-recommended");
+        }
+      });
+
+      // Actualizar constantes
+      const newVitals = scene.vitalsAfter[optionIdx] || scene.vitalsAfter;
+      updateVitals(newVitals.fc, newVitals.sat, newVitals.fr, newVitals.ta);
+
+      // Registrar historial si no es rescate
+      if (!scene.isRescue) {
+        totalScore += selectedOpt.points;
+        const recommendedOpt = scene.options.find(o => o.qualification === "correcta");
+        userHistory.push({
+          decisionNum: scene.decisionNumber,
+          badgeText: scene.badgeText,
+          chosenText: selectedOpt.text,
+          recommendedText: recommendedOpt ? recommendedOpt.text : selectedOpt.text,
+          qualification: selectedOpt.qualification,
+          points: selectedOpt.points
+        });
+      }
+
+      // Configurar panel feedback
+      feedbackPanel.className = `feedback-panel fb-${selectedOpt.qualification}`;
+      
+      let titleText = "";
+      if (selectedOpt.qualification === "correcta") {
+        titleText = `Opción Correcta (+${selectedOpt.points} pts)`;
+      } else if (selectedOpt.qualification === "aceptable") {
+        titleText = `Opción Aceptable pero Mejorable (+${selectedOpt.points} pt)`;
+      } else {
+        titleText = `Error Grave de Manejo (+${selectedOpt.points} pts)`;
+      }
+      
+      fbTitle.textContent = titleText;
+      fbConsequence.innerHTML = `<strong>Qué ocurre al paciente:</strong> ${selectedOpt.consequence}`;
+      fbExplanation.innerHTML = `<strong>Justificación clínica:</strong> ${selectedOpt.explanation}`;
+      fbSource.innerHTML = `<strong>Fuente:</strong> ${selectedOpt.source}`;
+
+      feedbackPanel.style.display = "block";
+
+      // Botón continuar
+      btnNext.onclick = () => {
+        if (selectedOpt.nextScene === "final") {
+          renderFinalScreen();
+        } else {
+          currentSceneKey = selectedOpt.nextScene;
+          renderScene(currentSceneKey);
+        }
+      };
+    }
+
+    // Renderizar pantalla final
+    function renderFinalScreen() {
+      sceneCard.style.display = "none";
+      progressWrapper.style.display = "none";
+
+      finalScoreNum.textContent = `${totalScore} / 10`;
+
+      // Tabla de resumen
+      summaryTbody.innerHTML = "";
+      userHistory.forEach(item => {
+        const tr = document.createElement("tr");
+
+        let qualBadge = "";
+        if (item.qualification === "correcta") qualBadge = '<span style="color:#16a34a; font-weight:700;">[Correcta]</span>';
+        else if (item.qualification === "aceptable") qualBadge = '<span style="color:#d97706; font-weight:700;">[Aceptable]</span>';
+        else qualBadge = '<span style="color:#dc2626; font-weight:700;">[Error]</span>';
+
+        tr.innerHTML = `
+          <td><strong>Decisión ${item.decisionNum}</strong></td>
+          <td>${item.chosenText} ${qualBadge}</td>
+          <td>${item.recommendedText}</td>
+          <td style="font-weight:700; text-align:center;">${item.points}</td>
+        `;
+        summaryTbody.appendChild(tr);
+      });
+
+      // Mensajes clave
+      keyMessagesList.innerHTML = "";
+      CASE_DATA.keyMessages.forEach(msg => {
+        const li = document.createElement("li");
+        li.textContent = msg;
+        keyMessagesList.appendChild(li);
+      });
+
+      finalScreen.style.display = "block";
+    }
+
+    // Evento reiniciar
+    btnRestart.onclick = () => {
+      initGame();
+    };
+
+    // Iniciar al cargar
+    window.onload = initGame;
+  </script>
+</body>
+</html>
